@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Bienvenue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --success: #2d8a4e;
+      --sidebar-width: 230px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .step-indicator { padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .step { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.12);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: rgba(255,255,255,0.5); flex-shrink: 0;
+    }
+    .step-num.done { background: var(--success); color: #fff; }
+    .step-num.active { background: var(--rose); color: #fff; }
+    .step-label { font-size: 13px; color: rgba(255,255,255,0.45); font-weight: 500; }
+    .step-label.active { color: rgba(255,255,255,0.9); font-weight: 600; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: auto; }
+    .skip-btn {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+      padding: 0; text-decoration: underline; transition: color 0.2s;
+    }
+    .skip-btn:hover { color: rgba(255,255,255,0.65); }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 48px; max-width: 780px; }
+    .welcome-header { margin-bottom: 40px; }
+    .welcome-header .eyebrow {
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--rose); margin-bottom: 8px;
+    }
+    .welcome-header h2 { font-size: 32px; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .welcome-header p { color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+    .card { background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; }
+    .card-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .card-title span.tag {
+      font-size: 11px; font-weight: 600; background: #f0f0f0; color: var(--muted);
+      padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+
+    .fg { margin-bottom: 18px; }
+    .fg label { display: block; font-size: 13px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .fi, .fs {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e5e3de; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      background: var(--cream); outline: none; transition: border-color 0.2s;
+    }
+    .fi:focus, .fs:focus { border-color: var(--rose); background: #fff; }
+    .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .optional-tag { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+    .sizes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .size-item label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.04em; }
+    .size-item input { font-size: 13px; }
+
+    .actions { display: flex; gap: 12px; align-items: center; margin-top: 32px; }
+    .btn {
+      padding: 12px 28px; border: none; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-ghost {
+      background: transparent; color: var(--ink); border: 1.5px solid #ddd8d2;
+      font-size: 14px; padding: 10px 22px;
+    }
+    .btn-ghost:hover { background: rgba(0,0,0,0.04); }
+
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+    .msg-error { background: #fff1f2; color: #dc2626; }
+    .msg-success { background: #f0fdf4; color: var(--success); }
+
+    .photo-placeholder {
+      width: 80px; height: 80px; border-radius: 50%; background: #e5e3de;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 28px; font-weight: 700; margin-bottom: 12px;
+    }
+    .photo-note { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* === HAMBURGER === */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 24px 20px; padding-top: 68px; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .fg-row { grid-template-columns: 1fr; }
+      .sizes-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+    </div>
+    <div class="step-indicator">
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-label">Compte activé</div>
+      </div>
+      <div class="step">
+        <div class="step-num active">2</div>
+        <div class="step-label active">Votre fiche</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-label">Tableau de bord</div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="skip-btn" onclick="skipOnboarding()">Passer pour l'instant →</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="welcome-header">
+      <div class="eyebrow">Bienvenue</div>
+      <h2>Complétez votre fiche</h2>
+      <p>Ces informations permettent à l'équipe de vous identifier. Vous pourrez les modifier à tout moment depuis "Mon profil".</p>
+    </div>
+
+    <div id="error-msg" class="msg msg-error" style="display:none"></div>
+
+    <!-- Coordonnées -->
+    <div class="card">
+      <div class="card-title">
+        Coordonnées personnelles
+        <span class="tag">Optionnel</span>
+      </div>
+      <div class="fg-row">
+        <div class="fg">
+          <label>Prénom <span style="color:var(--rose)">*</span></label>
+          <input class="fi" id="first_name" placeholder="Prénom">
+        </div>
+        <div class="fg">
+          <label>Nom <span style="color:var(--rose)">*</span></label>
+          <input class="fi" id="last_name" placeholder="Nom">
+        </div>
+      </div>
+      <div class="fg">
+        <label>Téléphone <span class="optional-tag">(optionnel)</span></label>
+        <input class="fi" id="phone" type="tel" placeholder="06 12 34 56 78">
+      </div>
+      <div class="fg">
+        <label>Adresse <span class="optional-tag">(optionnel)</span></label>
+        <input class="fi" id="address" placeholder="Adresse complète">
+      </div>
+      <div class="fg">
+        <label>Date de naissance <span class="optional-tag">(optionnel)</span></label>
+        <input class="fi" id="birth_date" type="date">
+      </div>
+      <div class="fg">
+        <label>Responsable légal <span class="optional-tag">(si mineur)</span></label>
+        <input class="fi" id="legal_guardian" placeholder="Nom + prénom du responsable légal">
+        <p class="form-hint">À renseigner uniquement pour les personnes mineures.</p>
+      </div>
+    </div>
+
+    <!-- Tailles -->
+    <div class="card">
+      <div class="card-title">
+        Tailles <span class="tag">Optionnel</span>
+      </div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.5;">
+        Selon votre discipline, ces informations serviront aux commandes de tenue.
+      </p>
+      <div class="sizes-grid">
+        <div class="size-item">
+          <label>Haut</label>
+          <input class="fi" id="size_top" placeholder="Ex : M, 38">
+        </div>
+        <div class="size-item">
+          <label>Bas</label>
+          <input class="fi" id="size_bottom" placeholder="Ex : 40">
+        </div>
+        <div class="size-item">
+          <label>Chaussures</label>
+          <input class="fi" id="size_shoes" placeholder="Ex : 39">
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo (placeholder) -->
+    <div class="card">
+      <div class="card-title">Photo de profil <span class="tag">Bientôt</span></div>
+      <div style="display:flex;align-items:center;gap:20px;">
+        <div class="photo-placeholder" id="photo-placeholder">?</div>
+        <div class="photo-note">
+          La photo de profil sera disponible prochainement.<br>
+          Elle sera utilisée dans la fonctionnalité communautaire.
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="save-btn" onclick="saveProfile()">Enregistrer ma fiche</button>
+      <button class="btn btn-ghost" onclick="skipOnboarding()">Passer pour l'instant</button>
+    </div>
+  </main>
+</div>
+
+<script>
+const token = localStorage.getItem('akademie_token');
+const currentUser = JSON.parse(localStorage.getItem('akademie_user') || 'null');
+
+if (!token || !currentUser) { window.location.replace('/login'); }
+
+// Prefill name from session
+document.getElementById('first_name').value = currentUser?.first_name || '';
+document.getElementById('last_name').value = currentUser?.last_name || '';
+
+const initials = `${(currentUser?.first_name || '?')[0]}${(currentUser?.last_name || '?')[0]}`.toUpperCase();
+document.getElementById('photo-placeholder').textContent = initials;
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    ...opts
+  });
+  const data = await res.json();
+  if (res.status === 401) { window.location.replace('/login'); throw new Error('Unauthorized'); }
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+  return data;
+}
+
+async function saveProfile() {
+  const first_name = document.getElementById('first_name').value.trim();
+  const last_name = document.getElementById('last_name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const birth_date = document.getElementById('birth_date').value;
+  const legal_guardian = document.getElementById('legal_guardian').value.trim();
+  const size_top = document.getElementById('size_top').value.trim();
+  const size_bottom = document.getElementById('size_bottom').value.trim();
+  const size_shoes = document.getElementById('size_shoes').value.trim();
+
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  if (!first_name || !last_name) {
+    errEl.textContent = 'Prénom et nom sont requis.';
+    errEl.style.display = '';
+    return;
+  }
+
+  const sizes = {};
+  if (size_top) sizes.top = size_top;
+  if (size_bottom) sizes.bottom = size_bottom;
+  if (size_shoes) sizes.shoes = size_shoes;
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enregistrement…';
+
+  try {
+    await api('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        first_name, last_name,
+        phone: phone || null,
+        address: address || null,
+        birth_date: birth_date || null,
+        legal_guardian: legal_guardian || null,
+        sizes: Object.keys(sizes).length ? sizes : null
+      })
+    });
+
+    await api('/api/profile/onboarding-complete', { method: 'POST', body: JSON.stringify({}) });
+
+    // Update stored user name
+    const updatedUser = { ...currentUser, first_name, last_name };
+    localStorage.setItem('akademie_user', JSON.stringify(updatedUser));
+
+    window.location.replace('/dashboard');
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = '';
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer ma fiche';
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+async function skipOnboarding() {
+  try {
+    await fetch('/api/profile/onboarding-complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({})
+    }).catch(() => {});
+  } catch (_) {}
+  window.location.replace('/dashboard');
+}
+</script>
+</body>
+</html>

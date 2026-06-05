@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang='fr'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>AcadémieOS — Le système nerveux de votre école de danse</title>
+    <link href='https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap' rel='stylesheet'>
+    <style>
+        :root {
+            --ink: #0a0a0a;
+            --cream: #faf8f5;
+            --rose: #c44d56;
+            --rose-light: #e8949a;
+            --gold: #c9a96e;
+            --slate: #555;
+            --muted: #999;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* === NAV === */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(250,248,245,0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.07);
+            padding: 0 2rem;
+        }
+
+        nav > div {
+            max-width: 1100px;
+            margin: 0 auto;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        nav .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--ink);
+            text-decoration: none;
+        }
+
+        nav .nav-brand span { color: var(--rose); }
+
+        nav .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        nav .nav-links a {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--slate);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        nav .nav-links a:hover { color: var(--rose); }
+        nav .nav-links a.active { color: var(--rose); }
+
+        nav .nav-cta {
+            padding: 0.45rem 1.1rem;
+            background: var(--ink);
+            color: #fff !important;
+            border-radius: 6px;
+            transition: background 0.2s !important;
+        }
+
+        nav .nav-cta:hover { background: var(--rose) !important; }
+
+        /* === HERO === */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            background: linear-gradient(165deg, var(--cream) 0%, #f3ede6 40%, #efe6dc 100%);
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, rgba(196,77,86,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--rose-light) 50%, transparent 100%);
+            opacity: 0.4;
+        }
+
+        .hero-inner {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--rose);
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-badge::before {
+            content: '';
+            width: 32px;
+            height: 2px;
+            background: var(--rose);
+        }
+
+        .hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.8rem, 7vw, 5.5rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            color: var(--ink);
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--rose);
+        }
+
+        .hero-sub {
+            font-size: clamp(1.1rem, 2vw, 1.35rem);
+            line-height: 1.7;
+            color: var(--slate);
+            max-width: 600px;
+            font-weight: 300;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 1rem 2.2rem;
+            background: var(--rose);
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .hero-cta:hover {
+            background: #b03d46;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 77, 86, 0.3);
+        }
+
+        .hero-cta svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* === STATS STRIP === */
+        .stats {
+            background: var(--ink);
+            padding: 3.5rem 2rem;
+        }
+
+        .stats-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--gold);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* === PHILOSOPHY === */
+        .philosophy {
+            padding: 7rem 2rem;
+            background: var(--cream);
+            position: relative;
+        }
+
+        .philosophy-inner {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .philosophy blockquote {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+            font-weight: 600;
+            line-height: 1.3;
+            color: var(--ink);
+            border-left: 3px solid var(--rose);
+            padding-left: 1.5rem;
+        }
+
+        .philosophy blockquote em {
+            font-style: italic;
+            color: var(--rose);
+        }
+
+        .philosophy p {
+            margin-top: 2rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--slate);
+            max-width: 620px;
+        }
+
+        /* === FEATURES === */
+        .features {
+            padding: 6rem 2rem 7rem;
+            background: #f0eae3;
+        }
+
+        .features-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .features .section-label {
+            margin-bottom: 3rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .feature-card {
+            background: var(--cream);
+            padding: 2.5rem;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .feature-card:hover {
+            background: #fff;
+        }
+
+        .feature-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--rose-light);
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--ink);
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            line-height: 1.65;
+            color: var(--slate);
+        }
+
+        /* === HERITAGE === */
+        .heritage {
+            padding: 7rem 2rem;
+            background: var(--ink);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .heritage::before {
+            content: '1965';
+            position: absolute;
+            top: 50%;
+            right: -2%;
+            transform: translateY(-50%);
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(8rem, 20vw, 18rem);
+            font-weight: 800;
+            color: rgba(255,255,255,0.03);
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .heritage-inner {
+            max-width: 700px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .heritage .section-label {
+            color: rgba(255,255,255,0.35);
+        }
+
+        .heritage h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 2rem;
+        }
+
+        .heritage p {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 1.5rem;
+        }
+
+        .heritage strong {
+            color: var(--gold);
+            font-weight: 500;
+        }
+
+        /* === CLOSING === */
+        .closing {
+            padding: 8rem 2rem;
+            background: linear-gradient(180deg, var(--cream) 0%, #f3ede6 100%);
+            text-align: center;
+        }
+
+        .closing-inner {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .closing h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
+            font-weight: 800;
+            line-height: 1.15;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+        }
+
+        .closing h2 em {
+            font-style: italic;
+            color: var(--rose);
+        }
+
+        .closing p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--slate);
+            font-weight: 300;
+        }
+
+        /* === FOOTER === */
+        footer {
+            padding: 2.5rem 2rem;
+            background: var(--ink);
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        footer p {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+            letter-spacing: 0.08em;
+        }
+
+        footer span { color: var(--rose-light); }
+
+        /* === MOBILE === */
+        @media (max-width: 768px) {
+            .hero { padding: 4rem 1.5rem 3rem; min-height: 85vh; }
+            .stats-inner { grid-template-columns: 1fr; gap: 1.5rem; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .feature-card { padding: 2rem 1.5rem; }
+            .philosophy { padding: 5rem 1.5rem; }
+            .features { padding: 4rem 1.5rem 5rem; }
+            .heritage { padding: 5rem 1.5rem; }
+            .closing { padding: 5rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div>
+            <a href='/' class='nav-brand'>AcadémieOS <span>par Polsia</span></a>
+            <div class='nav-links'>
+                <a href='/tarifs'>Tarifs &amp; Planning</a>
+                <a href='/dashboard' class='nav-cta'>Tableau de bord</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class='hero'>
+        <div class='hero-inner'>
+            <div class='hero-badge'>AcadémieOS</div>
+            <h1>Le système nerveux <em>de votre école de danse</em></h1>
+            <p class='hero-sub'>Inscriptions, planning multi-sites, suivi des élèves, finances. Tout ce qui permet à une école de danse de fonctionner, réuni dans un seul tableau de bord.</p>
+            <a href='/tarifs' class='hero-cta'>
+                Voir les tarifs &amp; planning
+                <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='5' y1='12' x2='19' y2='12'/><polyline points='12 5 19 12 12 19'/></svg>
+            </a>
+        </div>
+    </section>
+
+    <section class='stats'>
+        <div class='stats-inner'>
+            <div>
+                <div class='stat-num'>60+</div>
+                <div class='stat-label'>Années d'héritage</div>
+            </div>
+            <div>
+                <div class='stat-num'>2</div>
+                <div class='stat-label'>Sites — Gujan &amp; Arcachon</div>
+            </div>
+            <div>
+                <div class='stat-num'>10</div>
+                <div class='stat-label'>Disciplines</div>
+            </div>
+        </div>
+    </section>
+
+    <section class='philosophy'>
+        <div class='philosophy-inner'>
+            <div class='section-label'>La philosophie</div>
+            <blockquote>Votre métier, c'est de transmettre <em>la passion du mouvement.</em> Pas de jongler entre des tableaux Excel et des groupes WhatsApp.</blockquote>
+            <p>AcadémieOS prend en charge la gestion, pour que vous puissiez vous concentrer sur ce qui compte : vos élèves, votre art, votre école.</p>
+        </div>
+    </section>
+
+    <section class='features'>
+        <div class='features-inner'>
+            <div class='section-label'>Ce que pilote AcadémieOS</div>
+            <div class='feature-grid'>
+                <div class='feature-card'>
+                    <div class='feature-num'>01</div>
+                    <h3>Inscriptions &amp; élèves</h3>
+                    <p>Tableau de bord complet des inscriptions. Fichiers élèves, historique, niveaux, paiements. Tout est centralisé, plus rien ne se perd.</p>
+                </div>
+                <div class='feature-card'>
+                    <div class='feature-num'>02</div>
+                    <h3>Planning multi-sites</h3>
+                    <p>Gérez les emplois du temps de Gujan-Mestras et Arcachon depuis un seul endroit. Modifications en temps réel, pas de conflits.</p>
+                </div>
+                <div class='feature-card'>
+                    <div class='feature-num'>03</div>
+                    <h3>Suivi financier</h3>
+                    <p>Revenus par site, par discipline, par saison. Visualisez la santé financière de l'école d'un coup d'œil. Anticipez au lieu de réagir.</p>
+                </div>
+                <div class='feature-card'>
+                    <div class='feature-num'>04</div>
+                    <h3>Communication parents</h3>
+                    <p>Rappels automatiques, newsletters de rentrée, notifications de spectacles. Les parents restent informés sans que vous y passiez des heures.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class='heritage'>
+        <div class='heritage-inner'>
+            <div class='section-label'>L'héritage</div>
+            <h2>Fondée en 1965. Modernisée pour les 60 prochaines années.</h2>
+            <p>L'Académie Joseph-Séverac forme des danseurs depuis trois générations. Du classique au hip-hop, du baccalauréat danse aux programmes inclusifs, <strong>chaque discipline porte une vision : le mouvement est universel.</strong></p>
+            <p>AcadémieOS est construit pour protéger cet héritage, en donnant à l'équipe les outils digitaux pour <strong>accueillir plus d'élèves, gérer plus efficacement, et se concentrer sur la transmission.</strong></p>
+        </div>
+    </section>
+
+    <section class='closing'>
+        <div class='closing-inner'>
+            <h2>L'art de danser. <em>La science de gérer.</em></h2>
+            <p>Quand la gestion est invisible, la danse prend toute la place. C'est exactement le but.</p>
+            <a href='/tarifs' class='hero-cta' style='margin-top: 2rem;'>
+                Voir les tarifs &amp; planning
+                <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='5' y1='12' x2='19' y2='12'/><polyline points='12 5 19 12 12 19'/></svg>
+            </a>
+        </div>
+    </section>
+
+    <footer>
+        <p>AcadémieOS — Construit par <span>Polsia</span></p>
+    </footer>
+
+    <!-- Polsia Analytics -->
+    <script>
+    (function() {
+        var slug = 'academieos';
+        if (!slug) return;
+        var vid = localStorage.getItem('polsia_vid');
+        if (!vid) {
+            vid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            localStorage.setItem('polsia_vid', vid);
+        }
+        new Image().src = 'https://polsia.com/api/beacon/pixel?s=' + encodeURIComponent(slug) + '&v=' + encodeURIComponent(vid);
+    })();
+    </script>
+</body>
+</html>

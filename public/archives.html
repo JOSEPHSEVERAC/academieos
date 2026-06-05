@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Archives</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info {
+      margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px;
+    }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--rose-light); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+      padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .view-header-sub { color: var(--slate); font-size: 14px; margin-top: 4px; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid #ddd8d2; }
+    .btn-ghost:hover { background: rgba(0,0,0,0.04); }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-success:hover { filter: brightness(0.9); transform: translateY(-1px); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(0.9); transform: translateY(-1px); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+
+    .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .search-input {
+      padding: 10px 16px; border: 1.5px solid #ddd8d2; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; background: #fff;
+      min-width: 280px; transition: border 0.2s;
+    }
+    .search-input:focus { outline: none; border-color: var(--ink); }
+
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0 16px 14px; }
+    td { padding: 14px 16px; border-top: 1px solid #f0ede8; font-size: 14px; vertical-align: middle; }
+    tr:hover td { background: #faf8f5; }
+
+    .actions { display: flex; gap: 8px; align-items: center; }
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 600;
+    }
+    .archived-date { font-size: 12px; color: var(--slate); }
+
+    .empty-state {
+      text-align: center; padding: 64px 32px; color: var(--slate);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--ink); }
+    .empty-state p { font-size: 14px; }
+
+    /* Toast */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast {
+      background: var(--ink); color: #fff; padding: 14px 20px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      display: flex; align-items: center; gap: 10px; animation: fadeIn 0.2s ease;
+      min-width: 260px; max-width: 400px;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Confirm modal */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .overlay.hidden { display: none; }
+    .modal { background: #fff; border-radius: 16px; padding: 36px; max-width: 440px; width: 90%; }
+    .modal h3 { font-size: 20px; margin-bottom: 12px; }
+    .modal p { font-size: 14px; color: var(--slate); margin-bottom: 24px; line-height: 1.6; }
+    .modal .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+
+    .level-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 5px;
+      font-size: 11px; font-weight: 700; background: #f0ede8; color: var(--slate);
+    }
+
+    /* Mobile hamburger */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 24px 20px; padding-top: 68px; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info" id="user-info" style="display:none">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role-badge">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/dashboard#students">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Élèves
+      </a>
+      <a class="nav-link active" href="/archives">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        Archives
+      </a>
+      <a class="nav-link" href="/users" id="nav-users" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h2>Archives</h2>
+        <div class="view-header-sub">Élèves archivés — données conservées, accès suspendu</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="f-search" class="search-input" placeholder="Rechercher un eleve archive…" oninput="debounceSearch()" autocomplete="off">
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>N° adhérent</th>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Formule</th>
+            <th>Archivé le</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="archives-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Chargement…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Confirm modal -->
+<div class="overlay hidden" id="ov-confirm">
+  <div class="modal">
+    <h3 id="cf-title"></h3>
+    <p id="cf-msg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Annuler</button>
+      <button class="btn" id="cf-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  const TOKEN_KEY = 'akademie_token';
+  let currentUser = null;
+  let allArchived = [];
+  let searchTimeout = null;
+
+  function getToken() { return localStorage.getItem(TOKEN_KEY); }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('visible');
+  }
+
+  async function api(path, opts = {}) {
+    const token = getToken();
+    const res = await fetch(path, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) }
+    });
+    if (res.status === 401) { window.location.href = '/login'; throw new Error('Non authentifié'); }
+    if (res.status === 403) throw new Error('Accès non autorisé');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Erreur ${res.status}`);
+    }
+    return res.json();
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  }
+
+  // Confirm modal
+  let confirmCallback = null;
+  function showConfirm(title, msg, okLabel, okClass, cb) {
+    document.getElementById('cf-title').textContent = title;
+    document.getElementById('cf-msg').innerHTML = msg;
+    const okBtn = document.getElementById('cf-ok');
+    okBtn.textContent = okLabel;
+    okBtn.className = `btn ${okClass}`;
+    confirmCallback = cb;
+    document.getElementById('ov-confirm').classList.remove('hidden');
+    // Capture callback before closeConfirm() clears it
+    okBtn.onclick = () => { const fn = confirmCallback; closeConfirm(); if (fn) fn(); };
+  }
+  function closeConfirm() { document.getElementById('ov-confirm').classList.add('hidden'); confirmCallback = null; }
+
+  async function doLogout() {
+    try { await api('/auth/logout', { method: 'POST' }); } catch (_) {}
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = '/login';
+  }
+
+  async function loadArchives() {
+    const search = document.getElementById('f-search').value.trim();
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    try {
+      allArchived = await api('/api/archives/students' + (search ? '?' + params : ''));
+      renderArchives();
+    } catch (e) {
+      document.getElementById('archives-tbody').innerHTML =
+        `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Erreur : ${esc(e.message)}</td></tr>`;
+    }
+  }
+
+  function renderArchives() {
+    const tbody = document.getElementById('archives-tbody');
+    if (!allArchived.length) {
+      tbody.innerHTML = `
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <div class="icon">🗃️</div>
+            <h3>Aucun élève archivé</h3>
+            <p>Les élèves archivés apparaîtront ici.</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    const isPresident = currentUser && currentUser.role === 'PRÉSIDENT';
+
+    tbody.innerHTML = allArchived.map(s => {
+      const numAdh = s.numero_adherent
+        ? `<span style="font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:5px;padding:2px 6px;">${esc(s.numero_adherent)}</span>`
+        : '<span style="color:var(--muted);font-size:12px;">—</span>';
+
+      const purgeBtn = isPresident
+        ? `<button class="btn btn-danger btn-sm" onclick="confirmPurge(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">Supprimer définitivement</button>`
+        : '';
+
+      return `<tr>
+        <td>${numAdh}</td>
+        <td><strong>${esc(s.last_name)}</strong></td>
+        <td>${esc(s.first_name)}</td>
+        <td>${s.formule ? `<span class="badge" style="background:#f0ede8;color:var(--slate)">${esc(s.formule)}</span>` : '<span style="color:var(--muted)">—</span>'}</td>
+        <td><span class="archived-date">${formatDate(s.archived_at)}</span></td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-success btn-sm" onclick="confirmRestore(${s.id},'${esc(s.first_name)} ${esc(s.last_name)}')">
+              Réactiver
+            </button>
+            ${purgeBtn}
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function confirmRestore(id, name) {
+    showConfirm(
+      'Réactiver l\'élève',
+      `Réactiver <strong>${esc(name)}</strong> ? L'élève retrouvera son accès complet avec tout son historique.`,
+      'Réactiver',
+      'btn-success',
+      async () => {
+        try {
+          await api(`/api/archives/students/${id}/restore`, { method: 'PATCH' });
+          toast(`${name} réactivé(e)`, 'success');
+          loadArchives();
+        } catch (e) { toast(e.message, 'error'); }
+      }
+    );
+  }
+
+  function confirmPurge(id, name) {
+    showConfirm(
+      'Suppression définitive',
+      `⚠️ Supprimer définitivement <strong>${esc(name)}</strong> ?<br><br>
+       Cette action est <strong>irréversible</strong>. Toutes les données personnelles de cet élève seront effacées de la base de données (droit à l'effacement RGPD).`,
+      'Supprimer définitivement',
+      'btn-danger',
+      async () => {
+        try {
+          await api(`/api/archives/students/${id}/purge`, { method: 'DELETE' });
+          toast(`${name} supprimé(e) définitivement`, 'success');
+          loadArchives();
+        } catch (e) { toast(e.message, 'error'); }
+      }
+    );
+  }
+
+  function debounceSearch() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(loadArchives, 300);
+  }
+
+  async function init() {
+    const token = getToken();
+    if (!token) { window.location.href = '/login'; return; }
+    try {
+      const data = await api('/auth/me');
+      currentUser = data.user;
+      document.getElementById('user-info').style.display = '';
+      document.getElementById('user-greeting').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+      document.getElementById('user-role-badge').textContent = currentUser.role;
+      if (currentUser.role === 'PRÉSIDENT') {
+        document.getElementById('nav-users').style.display = '';
+      }
+    } catch (_) { window.location.href = '/login'; return; }
+    await loadArchives();
+  }
+
+  init();
+</script>
+</body>
+</html>

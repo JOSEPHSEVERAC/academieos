@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Mon profil</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info { margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px; }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 24px; color: rgba(255,255,255,0.55);
+      text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent;
+      font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn { background: none; border: none; color: rgba(255,255,255,0.35); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* === HAMBURGER === */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; max-width: calc(var(--sidebar-width) + 860px); }
+    .view-header { margin-bottom: 32px; display: flex; align-items: flex-start; gap: 20px; }
+    .profile-avatar {
+      width: 64px; height: 64px; border-radius: 50%; background: var(--ink);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; flex-shrink: 0;
+    }
+    .view-header-text h2 { font-size: 26px; letter-spacing: -0.02em; }
+    .view-header-text .role-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      margin-top: 6px;
+    }
+    .role-PRÉSIDENT { background: #fef3c7; color: #92400e; }
+    .role-DIRECTRICE { background: #e0e7ff; color: #3730a3; }
+    .role-PROFESSEUR { background: #f0fdf4; color: #166534; }
+    .role-CLIENT { background: #f5f3ff; color: #6d28d9; }
+
+    .section { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 20px; }
+    .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 20px; }
+
+    .fg { margin-bottom: 16px; }
+    .fg label { display: block; font-size: 13px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .fi, .fs {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e5e3de; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      background: var(--cream); outline: none; transition: border-color 0.2s;
+    }
+    .fi:focus, .fs:focus { border-color: var(--rose); background: #fff; }
+    .fi:disabled { opacity: 0.5; cursor: not-allowed; }
+    .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .sizes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .size-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; display: block; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .photo-row { display: flex; align-items: center; gap: 20px; }
+    .photo-avatar {
+      width: 72px; height: 72px; border-radius: 50%; background: #e5e3de;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 24px; font-weight: 700;
+    }
+    .photo-info { flex: 1; }
+    .photo-info p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .action-row { display: flex; align-items: center; gap: 16px; margin-top: 8px; }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; z-index: 999;
+      transition: opacity 0.3s; opacity: 0; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+
+    .info-box {
+      background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;
+      padding: 12px 16px; font-size: 13px; color: #9a3412; margin-bottom: 16px;
+    }
+
+    .btn-outline {
+      background: transparent; color: var(--slate); border: 1.5px solid #e5e3de;
+    }
+    .btn-outline:hover { border-color: var(--ink); color: var(--ink); background: transparent; transform: translateY(-1px); }
+
+    .security-desc {
+      font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;
+    }
+
+    #loading { text-align: center; color: var(--muted); padding: 48px; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 24px 20px; padding-top: 68px; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .fg-row { grid-template-columns: 1fr; }
+      .sizes-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role-display" style="color: var(--gold)">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link active" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+      <a class="nav-link" href="/messagerie" id="nav-messagerie" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/users" id="nav-users" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div id="loading">Chargement du profil…</div>
+    <div id="profile-content" style="display:none">
+
+      <div class="view-header">
+        <div class="profile-avatar" id="header-avatar">—</div>
+        <div class="view-header-text">
+          <h2 id="header-name">—</h2>
+          <span class="role-badge" id="header-role">—</span>
+        </div>
+      </div>
+
+      <!-- Informations personnelles -->
+      <div class="section">
+        <div class="section-title">Informations personnelles</div>
+        <div class="fg-row">
+          <div class="fg">
+            <label>Prénom <span style="color:var(--rose)">*</span></label>
+            <input class="fi" id="first_name" placeholder="Prénom">
+          </div>
+          <div class="fg">
+            <label>Nom <span style="color:var(--rose)">*</span></label>
+            <input class="fi" id="last_name" placeholder="Nom">
+          </div>
+        </div>
+        <div class="fg">
+          <label>Email</label>
+          <input class="fi" id="email" disabled>
+          <p class="form-hint">L'email ne peut pas être modifié depuis cette page.</p>
+        </div>
+        <div class="fg">
+          <label>Téléphone</label>
+          <input class="fi" id="phone" type="tel" placeholder="06 12 34 56 78">
+        </div>
+        <div class="fg">
+          <label>Adresse</label>
+          <input class="fi" id="address" placeholder="Adresse complète">
+        </div>
+        <div class="fg-row">
+          <div class="fg">
+            <label>Date de naissance</label>
+            <input class="fi" id="birth_date" type="date">
+          </div>
+          <div class="fg">
+            <label>Responsable légal <span style="color:var(--muted);font-weight:400;font-size:12px">(si mineur)</span></label>
+            <input class="fi" id="legal_guardian" placeholder="Nom + prénom">
+          </div>
+        </div>
+      </div>
+
+      <!-- Tailles -->
+      <div class="section">
+        <div class="section-title">Tailles</div>
+        <div class="sizes-grid">
+          <div>
+            <span class="size-label">Haut</span>
+            <input class="fi" id="size_top" placeholder="Ex : M, 38">
+          </div>
+          <div>
+            <span class="size-label">Bas</span>
+            <input class="fi" id="size_bottom" placeholder="Ex : 40">
+          </div>
+          <div>
+            <span class="size-label">Chaussures</span>
+            <input class="fi" id="size_shoes" placeholder="Ex : 39">
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo de profil -->
+      <div class="section">
+        <div class="section-title">Photo de profil</div>
+        <div class="photo-row">
+          <div class="photo-avatar" id="photo-avatar">—</div>
+          <div class="photo-info">
+            <div class="info-box">
+              La photo de profil sera disponible dans une prochaine mise à jour. Elle sera utilisée pour la fonctionnalité communauté/réseau.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sécurité -->
+      <div class="section">
+        <div class="section-title">Sécurité</div>
+        <p class="security-desc">
+          Un lien de modification de mot de passe vous sera envoyé par email. Vous serez déconnecté automatiquement et devrez vous reconnecter avec votre nouveau mot de passe et votre code 2FA.
+        </p>
+        <button class="btn btn-outline" id="change-pwd-btn" onclick="requestPasswordChange()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span id="change-pwd-label">Modifier mon mot de passe</span>
+        </button>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" id="save-btn" onclick="saveProfile()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const token = localStorage.getItem('akademie_token');
+const currentUser = JSON.parse(localStorage.getItem('akademie_user') || 'null');
+
+if (!token || !currentUser) { window.location.replace('/login'); }
+
+// Show/hide users link for PRÉSIDENT
+document.getElementById('user-greeting').textContent = `Bonjour ${currentUser?.first_name || '—'}`;
+document.getElementById('user-role-display').textContent = currentUser?.role || '—';
+if (currentUser?.role === 'PRÉSIDENT') {
+  document.getElementById('nav-users').style.display = '';
+}
+if (['PRÉSIDENT', 'DIRECTRICE', 'PROFESSEUR'].includes(currentUser?.role)) {
+  const nm = document.getElementById('nav-messagerie');
+  if (nm) nm.style.display = '';
+}
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    ...opts
+  });
+  const data = await res.json();
+  if (res.status === 401) { window.location.replace('/login'); throw new Error('Unauthorized'); }
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+  return data;
+}
+
+let profile = null;
+
+async function loadProfile() {
+  try {
+    profile = await api('/api/profile');
+    renderProfile(profile);
+  } catch (err) {
+    document.getElementById('loading').textContent = 'Erreur : ' + err.message;
+  }
+}
+
+function renderProfile(p) {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('profile-content').style.display = '';
+
+  // Header
+  const initials = `${(p.first_name || '?')[0]}${(p.last_name || '?')[0]}`.toUpperCase();
+  document.getElementById('header-avatar').textContent = initials;
+  document.getElementById('photo-avatar').textContent = initials;
+  document.getElementById('header-name').textContent = `${p.first_name} ${p.last_name}`;
+  const roleBadge = document.getElementById('header-role');
+  roleBadge.textContent = p.role;
+  roleBadge.className = `role-badge role-${p.role}`;
+
+  // Form fields
+  document.getElementById('first_name').value = p.first_name || '';
+  document.getElementById('last_name').value = p.last_name || '';
+  document.getElementById('email').value = p.email || '';
+  document.getElementById('phone').value = p.phone || '';
+  document.getElementById('address').value = p.address || '';
+  document.getElementById('birth_date').value = p.birth_date ? p.birth_date.split('T')[0] : '';
+  document.getElementById('legal_guardian').value = p.legal_guardian || '';
+
+  // Sizes
+  const sizes = p.sizes || {};
+  document.getElementById('size_top').value = sizes.top || '';
+  document.getElementById('size_bottom').value = sizes.bottom || '';
+  document.getElementById('size_shoes').value = sizes.shoes || '';
+}
+
+async function saveProfile() {
+  const first_name = document.getElementById('first_name').value.trim();
+  const last_name = document.getElementById('last_name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const address = document.getElementById('address').value.trim();
+  const birth_date = document.getElementById('birth_date').value;
+  const legal_guardian = document.getElementById('legal_guardian').value.trim();
+  const size_top = document.getElementById('size_top').value.trim();
+  const size_bottom = document.getElementById('size_bottom').value.trim();
+  const size_shoes = document.getElementById('size_shoes').value.trim();
+
+  if (!first_name || !last_name) {
+    showToast('Prénom et nom sont requis.', true);
+    return;
+  }
+
+  const sizes = {};
+  if (size_top) sizes.top = size_top;
+  if (size_bottom) sizes.bottom = size_bottom;
+  if (size_shoes) sizes.shoes = size_shoes;
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+
+  try {
+    const updated = await api('/api/profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        first_name, last_name,
+        phone: phone || null,
+        address: address || null,
+        birth_date: birth_date || null,
+        legal_guardian: legal_guardian || null,
+        sizes: Object.keys(sizes).length ? sizes : null
+      })
+    });
+
+    // Update header + stored user
+    const initials = `${first_name[0]}${last_name[0]}`.toUpperCase();
+    document.getElementById('header-avatar').textContent = initials;
+    document.getElementById('photo-avatar').textContent = initials;
+    document.getElementById('header-name').textContent = `${first_name} ${last_name}`;
+    document.getElementById('user-greeting').textContent = `Bonjour ${first_name}`;
+
+    const storedUser = JSON.parse(localStorage.getItem('akademie_user') || '{}');
+    storedUser.first_name = first_name;
+    storedUser.last_name = last_name;
+    localStorage.setItem('akademie_user', JSON.stringify(storedUser));
+
+    showToast('Profil mis à jour ✓');
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function logout() {
+  await fetch('/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null);
+  localStorage.removeItem('akademie_token');
+  localStorage.removeItem('akademie_user');
+  window.location.replace('/login');
+}
+
+async function requestPasswordChange() {
+  const btn = document.getElementById('change-pwd-btn');
+  const label = document.getElementById('change-pwd-label');
+
+  if (!confirm('Un lien de modification sera envoyé à votre adresse email. Vous serez déconnecté et devrez définir un nouveau mot de passe via ce lien.\n\nContinuer ?')) {
+    return;
+  }
+
+  btn.disabled = true;
+  label.textContent = 'Envoi en cours…';
+
+  try {
+    const res = await fetch('/api/profile/request-password-change', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+
+    // Email confirmed sent + session invalidated server-side — clear local storage and redirect to login
+    showToast('Email envoyé ! Vérifiez votre boîte mail. Déconnexion en cours…');
+    setTimeout(() => {
+      localStorage.removeItem('akademie_token');
+      localStorage.removeItem('akademie_user');
+      window.location.replace('/login');
+    }, 3000);
+  } catch (err) {
+    // Server returned error — session is still active, user is NOT logged out
+    showToast('Erreur : ' + err.message, true);
+    btn.disabled = false;
+    label.textContent = 'Modifier mon mot de passe';
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+loadProfile();
+</script>
+</body>
+</html>

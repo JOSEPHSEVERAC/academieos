@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Gestion des utilisateurs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info {
+      margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px;
+    }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn { background: none; border: none; color: rgba(255,255,255,0.35); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* === HAMBURGER === */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid #ddd8d2; }
+    .btn-ghost:hover { background: rgba(0,0,0,0.04); }
+    .btn-warning { background: var(--warning); color: #fff; }
+    .btn-warning:hover { filter: brightness(0.9); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 6px; }
+
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0 16px 14px; }
+    td { padding: 14px 16px; border-top: 1px solid #f0ede8; font-size: 14px; vertical-align: middle; }
+    tr:hover td { background: #faf8f5; }
+
+    .role-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .role-PRÉSIDENT { background: #fef3c7; color: #92400e; }
+    .role-DIRECTRICE { background: #e0e7ff; color: #3730a3; }
+    .role-PROFESSEUR { background: #f0fdf4; color: #166534; }
+    .role-CLIENT { background: #f5f3ff; color: #6d28d9; }
+
+    /* Invitation status badges */
+    .inv-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+    .inv-pending { background: #f3f4f6; color: var(--muted); }
+    .inv-sent { background: #fff7ed; color: #c2410c; }
+    .inv-accepted { background: #fef9c3; color: #854d0e; }
+    .inv-active { background: #f0fdf4; color: var(--success); }
+    .inv-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .inv-active .inv-dot { background: var(--success); }
+    .inv-sent .inv-dot { background: #f97316; animation: pulse 1.5s infinite; }
+    .inv-pending .inv-dot { background: #d1d5db; }
+    .inv-accepted .inv-dot { background: #eab308; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    /* Action buttons row */
+    .actions-cell { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .empty-state { text-align: center; padding: 48px; color: var(--muted); }
+
+    /* Modal */
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+    .overlay.open { display: flex; }
+    .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 16px 48px rgba(0,0,0,0.15); margin: 24px; }
+    .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 24px 28px; border-bottom: 1px solid #f0ede8; }
+    .modal-head h3 { font-size: 18px; }
+    .modal-x { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--muted); line-height: 1; }
+    .modal-body { padding: 24px 28px; }
+    .modal-foot { padding: 16px 28px; border-top: 1px solid #f0ede8; display: flex; gap: 10px; justify-content: flex-end; }
+    .fg { margin-bottom: 16px; }
+    .fg label { display: block; font-size: 13px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .fi, .fs {
+      width: 100%; padding: 10px 14px; border: 1.5px solid #e5e3de; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      background: var(--cream); outline: none; transition: border-color 0.2s;
+    }
+    .fi:focus, .fs:focus { border-color: var(--rose); background: #fff; }
+    .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .invite-note {
+      background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px;
+      padding: 12px 16px; font-size: 13px; color: #0369a1; margin-bottom: 16px; line-height: 1.5;
+    }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; z-index: 999;
+      transition: opacity 0.3s; opacity: 0; pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 24px 20px; padding-top: 68px; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .view-header { flex-direction: column; align-items: flex-start; }
+      table { min-width: 600px; }
+      .card { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role" style="color: var(--gold)">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link active" href="/users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <h2>Gestion des utilisateurs</h2>
+      <button class="btn btn-primary" onclick="openCreateModal()">+ Nouvel utilisateur</button>
+    </div>
+
+    <div class="card">
+      <table id="users-table">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="5"><div class="empty-state">Chargement…</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="overlay" id="ov-user">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">Nouvel utilisateur</h3>
+      <button class="modal-x" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="invite-note" class="invite-note" style="display:none">
+        <strong>Aucun mot de passe requis.</strong> Après la création, cliquez sur "Envoyer l'invitation" pour que l'utilisateur reçoive un lien par email et définisse son propre mot de passe.
+      </div>
+      <div class="fg-row">
+        <div class="fg"><label>Prénom <span style="color:var(--rose)">*</span></label><input class="fi" id="u-first" placeholder="Prénom" required></div>
+        <div class="fg"><label>Nom <span style="color:var(--rose)">*</span></label><input class="fi" id="u-last" placeholder="Nom" required></div>
+      </div>
+      <div class="fg"><label>Email <span style="color:var(--rose)">*</span></label><input class="fi" id="u-email" type="email" placeholder="email@exemple.com" required></div>
+      <div class="fg">
+        <label>Rôle <span style="color:var(--rose)">*</span></label>
+        <select class="fs" id="u-role">
+          <option value="DIRECTRICE">DIRECTRICE</option>
+          <option value="PROFESSEUR">PROFESSEUR</option>
+          <option value="CLIENT">CLIENT (inactif)</option>
+          <option value="PRÉSIDENT">PRÉSIDENT</option>
+        </select>
+      </div>
+      <div class="fg" id="teacher-name-group" style="display:none">
+        <label>Nom de professeur <span style="color:var(--muted);font-weight:400">(correspondance avec les cours)</span></label>
+        <input class="fi" id="u-teacher" placeholder="Ex : Anne-Lise Bricogne">
+        <p class="form-hint">Permet au PROFESSEUR de voir uniquement ses propres cours.</p>
+      </div>
+      <div class="fg" id="active-group" style="display:none">
+        <label><input type="checkbox" id="u-active" style="margin-right:6px"> Compte actif</label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveUser()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const token = localStorage.getItem('akademie_token');
+const currentUser = JSON.parse(localStorage.getItem('akademie_user') || 'null');
+
+if (!token || !currentUser) { window.location.replace('/login'); }
+if (currentUser && currentUser.role !== 'PRÉSIDENT') { window.location.replace('/dashboard'); }
+
+document.getElementById('user-greeting').textContent = `Bonjour ${currentUser?.first_name || '—'}`;
+document.getElementById('user-role').textContent = currentUser?.role || '—';
+
+document.getElementById('u-role').addEventListener('change', () => {
+  const isProfesseur = document.getElementById('u-role').value === 'PROFESSEUR';
+  document.getElementById('teacher-name-group').style.display = isProfesseur ? '' : 'none';
+});
+
+let editingUserId = null;
+let usersData = [];
+
+async function api(url, opts = {}) {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    ...opts
+  });
+  const data = await res.json();
+  if (res.status === 401) { window.location.replace('/login'); throw new Error('Unauthorized'); }
+  if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+  return data;
+}
+
+async function loadUsers() {
+  try {
+    usersData = await api('/api/admin/users');
+    renderUsers(usersData);
+  } catch (err) {
+    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="5"><div class="empty-state">Erreur: ${err.message}</div></td></tr>`;
+  }
+}
+
+function getInviteStatus(u) {
+  if (u.last_login_at) {
+    return { cls: 'inv-active', label: 'Actif', dot: true };
+  }
+  if (u.invitation_accepted_at) {
+    return { cls: 'inv-accepted', label: 'Jamais connecté', dot: true };
+  }
+  if (u.invitation_sent_at) {
+    return { cls: 'inv-sent', label: 'Invitation envoyée', dot: true };
+  }
+  return { cls: 'inv-pending', label: 'En attente', dot: true };
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+  if (users.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Aucun utilisateur</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => {
+    const status = getInviteStatus(u);
+    const isCurrentUser = u.id === currentUser.id;
+    const inviteAccepted = !!u.invitation_accepted_at;
+
+    // Action buttons
+    let actions = `<button class="btn btn-ghost btn-sm" onclick="openEditModal(${u.id})">Modifier</button>`;
+
+    if (!isCurrentUser) {
+      // Invite buttons
+      if (!inviteAccepted) {
+        if (!u.invitation_sent_at) {
+          actions += `<button class="btn btn-primary btn-sm" onclick="sendInvite(${u.id})" style="background:var(--success)" title="Envoyer l'invitation par email">Envoyer l'invitation</button>`;
+        } else {
+          actions += `<button class="btn btn-ghost btn-sm" onclick="resendInvite(${u.id})" title="Renvoyer l'invitation (invalide l'ancien lien)">Renvoyer l'invitation</button>`;
+        }
+      }
+
+      // Password reset (only for users who have accepted)
+      if (inviteAccepted) {
+        actions += `<button class="btn btn-ghost btn-sm" onclick="resetPassword(${u.id})" title="Envoie un nouveau lien par email">Réinitialiser le mdp</button>`;
+      }
+
+      // Activate/deactivate
+      actions += `<button class="btn btn-ghost btn-sm" onclick="toggleActive(${u.id}, ${u.active})" style="color:${u.active ? 'var(--danger)' : 'var(--success)'}">
+        ${u.active ? 'Désactiver' : 'Activer'}
+      </button>`;
+    }
+
+    return `
+      <tr>
+        <td><strong>${escHtml(u.first_name)} ${escHtml(u.last_name)}</strong></td>
+        <td style="color:var(--muted)">${escHtml(u.email)}</td>
+        <td><span class="role-badge role-${u.role}">${u.role}</span></td>
+        <td>
+          <span class="inv-badge ${status.cls}">
+            <span class="inv-dot"></span>
+            ${status.label}
+          </span>
+          ${!u.active ? ' <span style="color:var(--muted);font-size:12px">(inactif)</span>' : ''}
+        </td>
+        <td><div class="actions-cell">${actions}</div></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openCreateModal() {
+  editingUserId = null;
+  document.getElementById('modal-title').textContent = 'Nouvel utilisateur';
+  document.getElementById('u-first').value = '';
+  document.getElementById('u-last').value = '';
+  document.getElementById('u-email').value = '';
+  document.getElementById('u-role').value = 'DIRECTRICE';
+  document.getElementById('u-teacher').value = '';
+  document.getElementById('u-email').disabled = false;
+  document.getElementById('active-group').style.display = 'none';
+  document.getElementById('teacher-name-group').style.display = 'none';
+  document.getElementById('invite-note').style.display = '';
+  document.getElementById('ov-user').classList.add('open');
+}
+
+function openEditModal(id) {
+  const u = usersData.find(u => u.id === id);
+  if (!u) return;
+  editingUserId = id;
+  document.getElementById('modal-title').textContent = 'Modifier l\'utilisateur';
+  document.getElementById('u-first').value = u.first_name;
+  document.getElementById('u-last').value = u.last_name;
+  document.getElementById('u-email').value = u.email;
+  document.getElementById('u-email').disabled = true;
+  document.getElementById('u-role').value = u.role;
+  document.getElementById('u-teacher').value = u.teacher_name || '';
+  document.getElementById('active-group').style.display = '';
+  document.getElementById('u-active').checked = u.active;
+  document.getElementById('teacher-name-group').style.display = u.role === 'PROFESSEUR' ? '' : 'none';
+  document.getElementById('invite-note').style.display = 'none';
+  document.getElementById('ov-user').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('ov-user').classList.remove('open');
+}
+
+async function saveUser() {
+  const first_name = document.getElementById('u-first').value.trim();
+  const last_name = document.getElementById('u-last').value.trim();
+  const email = document.getElementById('u-email').value.trim();
+  const role = document.getElementById('u-role').value;
+  const teacher_name = document.getElementById('u-teacher').value.trim();
+  const active = document.getElementById('u-active').checked;
+
+  if (!first_name || !last_name) return showToast('Prénom et nom requis', true);
+  if (!editingUserId && !email) return showToast('Email requis', true);
+
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+
+  try {
+    if (editingUserId) {
+      const body = { first_name, last_name, role, active };
+      if (teacher_name) body.teacher_name = teacher_name;
+      else body.teacher_name = null;
+      await api(`/api/admin/users/${editingUserId}`, { method: 'PUT', body: JSON.stringify(body) });
+    } else {
+      await api('/api/admin/users', { method: 'POST', body: JSON.stringify({ email, first_name, last_name, role, teacher_name: teacher_name || null }) });
+    }
+    closeModal();
+    showToast(editingUserId ? 'Utilisateur modifié ✓' : 'Compte créé — envoyez l\'invitation pour activer', false);
+    loadUsers();
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function sendInvite(id) {
+  if (!confirm('Envoyer l\'invitation par email maintenant ?')) return;
+  try {
+    const res = await api(`/api/admin/users/${id}/invite`, { method: 'POST', body: JSON.stringify({}) });
+    showToast(res.message || 'Invitation envoyée ✓');
+    loadUsers();
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  }
+}
+
+async function resendInvite(id) {
+  if (!confirm('Renvoyer l\'invitation ? L\'ancien lien sera invalidé.')) return;
+  try {
+    const res = await api(`/api/admin/users/${id}/reinvite`, { method: 'POST', body: JSON.stringify({}) });
+    showToast(res.message || 'Nouvelle invitation envoyée ✓');
+    loadUsers();
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  }
+}
+
+async function resetPassword(id) {
+  if (!confirm('Envoyer un lien de réinitialisation du mot de passe par email ?')) return;
+  try {
+    const res = await api(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify({}) });
+    showToast(res.message || 'Lien envoyé ✓');
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  }
+}
+
+async function toggleActive(id, currentActive) {
+  if (!confirm(`${currentActive ? 'Désactiver' : 'Activer'} cet utilisateur ?`)) return;
+  try {
+    await api(`/api/admin/users/${id}`, { method: 'PUT', body: JSON.stringify({ active: !currentActive }) });
+    showToast(`Utilisateur ${!currentActive ? 'activé' : 'désactivé'} ✓`);
+    loadUsers();
+  } catch (err) {
+    showToast('Erreur : ' + err.message, true);
+  }
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+async function logout() {
+  await fetch('/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => null);
+  localStorage.removeItem('akademie_token');
+  localStorage.removeItem('akademie_user');
+  window.location.replace('/login');
+}
+
+document.getElementById('ov-user').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('ov-user')) closeModal();
+});
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+loadUsers();
+</script>
+</body>
+</html>

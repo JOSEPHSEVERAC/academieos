@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Messagerie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Cormorant+Garamond:ital,wght@1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info { margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px; }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--rose-light); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+      padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* ── Hamburger ── */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Main layout ── */
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; max-width: calc(100vw - var(--sidebar-width)); }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .view-header-sub { color: var(--slate); font-size: 14px; margin-top: 4px; }
+
+    /* ── Tab navigation ── */
+    .tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 2px solid #ece8e3; flex-wrap: wrap; }
+    .tab-btn {
+      padding: 10px 20px; border: none; background: transparent;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--slate); }
+    .tab-btn.active { color: var(--rose); border-bottom-color: var(--rose); }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--rose); color: #fff; }
+    .btn-primary:hover { background: #b03d46; box-shadow: 0 4px 14px rgba(196,77,86,0.25); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn-ghost { background: transparent; border: 1.5px solid #ddd8d2; color: var(--slate); }
+    .btn-ghost:hover { border-color: var(--rose); color: var(--rose); }
+    .btn-ink { background: var(--ink); color: #fff; }
+    .btn-ink:hover { background: #222; transform: translateY(-1px); }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-xs { padding: 4px 10px; font-size: 12px; }
+
+    /* ── Card ── */
+    .card { background: #fff; border-radius: 14px; padding: 28px; box-shadow: 0 1px 4px rgba(10,10,10,0.05); border: 1px solid rgba(0,0,0,0.04); }
+    .card + .card { margin-top: 20px; }
+
+    /* ── Section titles ── */
+    .section-label {
+      font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted);
+      margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #ece8e3;
+    }
+
+    /* ── Segment filters ── */
+    .filters-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .filter-group label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .filter-select {
+      width: 100%; padding: 9px 12px; border: 1.5px solid #ddd8d2; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; background: #fff;
+      transition: border-color 0.2s; color: var(--ink); appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px;
+    }
+    .filter-select:focus { outline: none; border-color: var(--rose); }
+
+    /* ── Recipient counter ── */
+    .recipient-counter {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 16px 20px; background: #f5f1ec; border-radius: 10px; margin-bottom: 16px;
+    }
+    .recipient-count-num {
+      font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--ink);
+      line-height: 1;
+    }
+    .recipient-count-label { font-size: 13px; color: var(--slate); font-weight: 500; }
+    .counter-actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+
+    /* ── Quick segment chips ── */
+    .quick-segments { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .seg-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+      border: 1.5px solid #ddd8d2; background: #fff; color: var(--slate); cursor: pointer;
+      transition: all 0.15s; user-select: none;
+    }
+    .seg-chip:hover { border-color: var(--rose); color: var(--rose); }
+    .seg-chip.active { background: var(--rose); color: #fff; border-color: var(--rose); }
+
+    /* ── Recipient list preview ── */
+    #recipient-list-wrap {
+      display: none; margin-top: 16px; max-height: 260px; overflow-y: auto;
+      border: 1px solid #ece8e3; border-radius: 10px;
+    }
+    #recipient-list-wrap.visible { display: block; }
+    .recipient-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; border-bottom: 1px solid #f2efec; font-size: 13px;
+    }
+    .recipient-row:last-child { border-bottom: none; }
+    .recipient-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--rose); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .recipient-name { font-weight: 600; flex: 1; }
+    .recipient-email { color: var(--muted); font-size: 12px; }
+
+    /* ── Form fields ── */
+    .fg { margin-bottom: 20px; }
+    .fl { display: block; font-size: 12px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .fi {
+      width: 100%; padding: 11px 14px; border: 1.5px solid #ddd8d2; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; transition: border-color 0.2s; background: #fff;
+    }
+    .fi:focus { outline: none; border-color: var(--rose); }
+
+    /* ── Rich text editor ── */
+    #editor-toolbar {
+      display: flex; gap: 4px; padding: 8px 12px;
+      border: 1.5px solid #ddd8d2; border-bottom: none;
+      border-radius: 8px 8px 0 0; background: #faf8f5; flex-wrap: wrap;
+    }
+    .toolbar-btn {
+      padding: 5px 9px; border: none; background: transparent; border-radius: 5px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;
+      color: var(--slate); transition: all 0.15s; min-width: 28px;
+    }
+    .toolbar-btn:hover { background: #ece8e3; color: var(--ink); }
+    .toolbar-btn.active { background: var(--ink); color: #fff; }
+    .toolbar-sep { width: 1px; background: #ddd8d2; margin: 2px 4px; }
+    #editor-body {
+      min-height: 220px; padding: 16px; border: 1.5px solid #ddd8d2;
+      border-radius: 0 0 8px 8px; font-family: 'DM Sans', sans-serif; font-size: 15px;
+      line-height: 1.65; background: #fff; outline: none;
+      overflow-y: auto;
+    }
+    #editor-body:empty::before { content: 'Composez votre message ici…'; color: var(--muted); pointer-events: none; }
+    #editor-body ul, #editor-body ol { margin-left: 20px; }
+    #editor-body a { color: var(--rose); }
+
+    /* ── Link insert dialog ── */
+    .link-dialog {
+      display: none; position: absolute; z-index: 100;
+      background: #fff; border: 1px solid #ddd8d2; border-radius: 10px;
+      padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      min-width: 320px;
+    }
+    .link-dialog.visible { display: block; }
+    .link-dialog input { width: 100%; margin-bottom: 10px; }
+    .link-dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── Preview modal ── */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,10,10,0.6); z-index: 500;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: #fff; border-radius: 16px; width: 94%; max-width: 700px;
+      max-height: 90vh; overflow-y: auto;
+      animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-head {
+      padding: 22px 28px; border-bottom: 1px solid #ece8e3;
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: #fff; z-index: 10;
+    }
+    .modal-head h3 { font-size: 20px; }
+    .modal-x {
+      background: none; border: none; font-size: 24px; color: var(--muted);
+      cursor: pointer; width: 32px; height: 32px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+    }
+    .modal-x:hover { background: #f0ece8; color: var(--ink); }
+    .modal-body { padding: 24px 28px; }
+    .modal-foot { padding: 20px 28px; border-top: 1px solid #ece8e3; display: flex; justify-content: flex-end; gap: 12px; }
+
+    /* ── Email preview ── */
+    #email-preview-frame {
+      width: 100%; border: 1px solid #ece8e3; border-radius: 10px; overflow: hidden;
+    }
+    .preview-email-wrap { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333; }
+    .preview-header { background: #0a0a0a; text-align: center; padding: 28px 20px; }
+    .preview-header img { max-width: 140px; height: auto; display: block; margin: 0 auto; }
+    .preview-content { padding: 32px 40px; background: #fff; }
+    .preview-subject { font-size: 22px; font-weight: 700; color: #0a0a0a; margin-bottom: 20px; font-family: Georgia, serif; }
+    .preview-footer { padding: 20px 40px; background: #f9f9f9; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af; text-align: center; }
+
+    /* ── Confirm send dialog ── */
+    #confirm-send-modal .modal-body { text-align: center; padding: 36px 28px; }
+    #confirm-send-modal .big-num { font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800; color: var(--rose); }
+    #confirm-send-modal p { color: var(--slate); font-size: 15px; margin-top: 12px; line-height: 1.6; }
+
+    /* ── Sending progress ── */
+    #send-progress { display: none; text-align: center; padding: 32px 28px; }
+    #send-progress .spinner { border: 3px solid #ece8e3; border-top: 3px solid var(--rose); border-radius: 50%; width: 48px; height: 48px; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── History list ── */
+    .campaign-card {
+      background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05);
+      box-shadow: 0 1px 4px rgba(10,10,10,0.04); margin-bottom: 14px;
+      transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;
+      overflow: hidden;
+    }
+    .campaign-card:hover { box-shadow: 0 4px 16px rgba(10,10,10,0.08); transform: translateY(-1px); }
+    .campaign-card-head { padding: 18px 22px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+    .campaign-subject { font-size: 16px; font-weight: 700; color: var(--ink); flex: 1; min-width: 0; }
+    .campaign-meta { padding: 0 22px 16px; margin-top: 6px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+    .campaign-stat { font-size: 12px; color: var(--slate); display: flex; align-items: center; gap: 5px; }
+    .campaign-stat strong { color: var(--ink); font-weight: 700; }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; white-space: nowrap;
+    }
+    .badge-sent { background: rgba(45,138,78,0.12); color: var(--success); }
+    .badge-pending { background: rgba(230,147,10,0.12); color: var(--warning); }
+    .badge-failed { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .badge-opened { background: rgba(201,169,110,0.15); color: #9a6f1c; }
+
+    /* ── Campaign detail ── */
+    .stats-row-mini { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stat-mini {
+      flex: 1; min-width: 100px; background: var(--cream);
+      padding: 14px 18px; border-radius: 10px; text-align: center;
+    }
+    .stat-mini-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--ink); }
+    .stat-mini-val.green { color: var(--success); }
+    .stat-mini-val.red { color: var(--danger); }
+    .stat-mini-val.gold { color: var(--gold); }
+    .stat-mini-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+    /* ── Open-rate bar ── */
+    .open-bar-wrap { height: 8px; background: #ece8e3; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+    .open-bar { height: 100%; background: var(--gold); border-radius: 4px; transition: width 0.6s ease; }
+
+    /* ── Recipient detail table ── */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0 16px 12px; }
+    td { padding: 12px 16px; border-top: 1px solid #f2efec; font-size: 13px; vertical-align: middle; }
+    tr:hover td { background: #faf8f5; }
+
+    /* ── Empty / Loading ── */
+    .empty { text-align: center; padding: 64px 20px; color: var(--muted); }
+    .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-text { font-size: 15px; }
+    .loading-bar { text-align: center; padding: 40px; color: var(--muted); }
+    .spinner-sm { border: 2px solid #ece8e3; border-top: 2px solid var(--rose); border-radius: 50%; width: 22px; height: 22px; animation: spin 0.7s linear infinite; display: inline-block; }
+
+    /* ── Validation pending panel ── */
+    .pending-card {
+      background: #fff; border-radius: 12px; border: 1.5px solid #f0c97f;
+      box-shadow: 0 1px 4px rgba(10,10,10,0.04); margin-bottom: 14px;
+      padding: 18px 22px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    .pending-badge { background: rgba(230,147,10,0.12); color: var(--warning); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .pending-subject { font-size: 15px; font-weight: 700; color: var(--ink); flex: 1; min-width: 0; }
+    .pending-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .pending-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-approve { background: #2d8a4e; color: #fff; padding: 8px 16px; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-approve:hover { background: #236b3c; }
+    .btn-reject { background: transparent; border: 1.5px solid #dc3545; color: #dc3545; padding: 7px 14px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-reject:hover { background: #dc3545; color: #fff; }
+    .badge-validation { background: rgba(230,147,10,0.12); color: var(--warning); }
+    .badge-rejected { background: rgba(220,53,69,0.12); color: var(--danger); }
+    .badge-sending { background: rgba(45,138,78,0.12); color: var(--success); }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      padding: 14px 22px; border-radius: 10px; font-weight: 600;
+      font-size: 14px; color: #fff; max-width: 380px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      display: none; align-items: center; gap: 10px;
+      animation: toastIn 0.3s ease;
+    }
+    .toast-success { background: var(--success) !important; }
+    .toast-error { background: var(--danger) !important; }
+    .toast-info { background: var(--ink) !important; }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Mode toggle ── */
+    .mode-toggle { display: flex; gap: 0; margin-bottom: 20px; border: 1.5px solid #ddd8d2; border-radius: 10px; overflow: hidden; }
+    .mode-toggle-btn {
+      flex: 1; padding: 10px 16px; border: none; background: #fff;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    .mode-toggle-btn.active { background: var(--ink); color: #fff; }
+    .mode-toggle-btn:first-child { border-right: 1.5px solid #ddd8d2; }
+
+    /* ── Manual "À :" mode ── */
+    .to-field-wrap {
+      position: relative; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      padding: 8px 10px; border: 1.5px solid #ddd8d2; border-radius: 8px;
+      background: #fff; min-height: 44px; cursor: text; transition: border-color 0.2s;
+    }
+    .to-field-wrap:focus-within { border-color: var(--rose); }
+    .to-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--ink); color: #fff; font-size: 12px; font-weight: 600;
+      padding: 3px 8px 3px 10px; border-radius: 16px; white-space: nowrap;
+    }
+    .to-chip-remove {
+      background: none; border: none; color: rgba(255,255,255,0.6);
+      font-size: 14px; cursor: pointer; padding: 0; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      width: 16px; height: 16px; border-radius: 50%;
+      transition: color 0.15s;
+    }
+    .to-chip-remove:hover { color: #fff; background: rgba(255,255,255,0.15); }
+    .to-input {
+      border: none; outline: none; background: transparent;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      min-width: 140px; flex: 1;
+    }
+    .to-input::placeholder { color: var(--muted); }
+
+    /* ── Autocomplete dropdown ── */
+    .autocomplete-drop {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #fff; border: 1.5px solid #ddd8d2; border-radius: 10px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.1); z-index: 200; max-height: 240px; overflow-y: auto;
+    }
+    .autocomplete-drop.open { display: block; }
+    .ac-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; cursor: pointer; transition: background 0.1s;
+      border-bottom: 1px solid #f2efec; font-size: 13px;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.focused { background: #faf8f5; }
+    .ac-avatar {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--rose);
+      color: #fff; font-size: 10px; font-weight: 700; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ac-name { font-weight: 600; color: var(--ink); }
+    .ac-email { font-size: 11px; color: var(--muted); }
+    .ac-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    /* ── Secondary filters toggle ── */
+    .secondary-filters-toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1.5px solid #ddd8d2; border-radius: 20px;
+      padding: 5px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+      font-weight: 600; color: var(--muted); cursor: pointer; margin-bottom: 16px;
+      transition: all 0.2s;
+    }
+    .secondary-filters-toggle:hover { border-color: var(--rose); color: var(--rose); }
+    .secondary-filters-toggle.open { background: var(--rose); border-color: var(--rose); color: #fff; }
+    #secondary-filters { display: none; }
+    #secondary-filters.open { display: block; }
+
+    /* ── Filter text inputs (Nom/Prénom) ── */
+    .filter-input {
+      width: 100%; padding: 9px 12px; border: 1.5px solid #ddd8d2; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; background: #fff;
+      transition: border-color 0.2s; color: var(--ink);
+    }
+    .filter-input:focus { outline: none; border-color: var(--rose); }
+    .filter-input::placeholder { color: #bbb; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 24px 16px; padding-top: 68px; max-width: 100vw; }
+      .filters-grid { grid-template-columns: 1fr 1fr; }
+      .preview-content { padding: 20px; }
+      .campaign-meta { gap: 12px; }
+      .stats-row-mini { gap: 10px; }
+      .stat-mini { min-width: 80px; }
+    }
+    @media (max-width: 480px) {
+      .filters-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info" id="user-info" style="display:none">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role-badge">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/dashboard#students">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Élèves
+      </a>
+      <a class="nav-link active" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/archives" id="nav-archives" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        Archives
+      </a>
+      <a class="nav-link" href="/sante-base" id="nav-sante" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Santé de la base
+      </a>
+      <a class="nav-link" href="/users" id="nav-users" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h2>Messagerie</h2>
+        <div class="view-header-sub">Envoyez des emails groupés aux élèves inscrits</div>
+      </div>
+    </div>
+
+    <!-- Tab nav -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('compose')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Composer
+      </button>
+      <button class="tab-btn" onclick="switchTab('history')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Historique
+      </button>
+      <button class="tab-btn" id="tab-btn-validation" onclick="switchTab('validation')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;vertical-align:middle;margin-right:5px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Validation
+        <span id="tab-pending-count" style="display:none;background:var(--warning);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px">0</span>
+      </button>
+    </div>
+
+    <!-- ═══════════════ COMPOSE TAB ═══════════════ -->
+    <div class="tab-panel active" id="tab-compose">
+
+      <!-- ── Destinataires ── -->
+      <div class="card">
+        <div class="section-label">Destinataires</div>
+
+        <!-- Mode toggle: Manuel vs Filtres -->
+        <div class="mode-toggle" id="mode-toggle">
+          <button class="mode-toggle-btn active" id="mode-btn-manual" onclick="setMode('manual')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:middle;margin-right:5px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Sélection manuelle « À : »
+          </button>
+          <button class="mode-toggle-btn" id="mode-btn-filter" onclick="setMode('filter')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;vertical-align:middle;margin-right:5px"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Segmentation par filtres
+          </button>
+        </div>
+
+        <!-- ════ MODE MANUEL ════ -->
+        <div id="mode-manual">
+          <label class="fl" style="margin-bottom:8px">À :</label>
+          <!-- "To" field with autocomplete -->
+          <div class="to-field-wrap" id="to-field-wrap" onclick="focusToInput()">
+            <div id="to-chips"></div>
+            <input
+              type="text" id="to-input" class="to-input"
+              placeholder="Nom, prénom ou combinaison…"
+              autocomplete="off"
+              oninput="onToInput()"
+              onkeydown="onToKeydown(event)"
+            >
+            <div class="autocomplete-drop" id="autocomplete-drop"></div>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--muted)">
+            Tapez au moins 2 caractères — fuzzy match sur nom, prénom, ou combinaison.
+          </div>
+        </div>
+
+        <!-- ════ MODE FILTRES ════ -->
+        <div id="mode-filter" style="display:none">
+          <!-- Quick shortcuts -->
+          <div class="quick-segments">
+            <button class="seg-chip" id="chip-all" onclick="applyQuickSegment('all')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Tous les élèves actifs
+            </button>
+            <button class="seg-chip" id="chip-arcachon" onclick="applyQuickSegment('arcachon')">📍 Arcachon</button>
+            <button class="seg-chip" id="chip-gujan" onclick="applyQuickSegment('gujan')">📍 Gujan-Mestras</button>
+          </div>
+
+          <!-- Primary filters (always visible) -->
+          <div class="filters-grid" id="filters-grid">
+            <div class="filter-group">
+              <label>Nom</label>
+              <input class="filter-input" type="text" id="f-nom" placeholder="Ex : Dupont" oninput="schedulePreview()">
+            </div>
+            <div class="filter-group">
+              <label>Prénom</label>
+              <input class="filter-input" type="text" id="f-prenom" placeholder="Ex : Marie" oninput="schedulePreview()">
+            </div>
+            <div class="filter-group">
+              <label>Formule</label>
+              <select class="filter-select" id="f-formule" onchange="schedulePreview()">
+                <option value="">Toutes les formules</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Cours / Discipline</label>
+              <select class="filter-select" id="f-discipline" onchange="schedulePreview()">
+                <option value="">Tous les cours</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Site</label>
+              <select class="filter-select" id="f-location" onchange="schedulePreview()">
+                <option value="">Tous les sites</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Secondary filters toggle -->
+          <button class="secondary-filters-toggle" id="btn-secondary" onclick="toggleSecondaryFilters()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span id="btn-secondary-label">+ de champs</span>
+          </button>
+
+          <!-- Secondary filters (collapsible) -->
+          <div id="secondary-filters">
+            <div class="filters-grid" style="margin-bottom:16px">
+              <div class="filter-group">
+                <label>Sexe</label>
+                <select class="filter-select" id="f-sexe" onchange="schedulePreview()">
+                  <option value="">Tous</option>
+                  <option value="F">Féminin</option>
+                  <option value="M">Masculin</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Mode de paiement</label>
+                <select class="filter-select" id="f-mode" onchange="schedulePreview()">
+                  <option value="">Tous les modes</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Saison</label>
+                <select class="filter-select" id="f-saison" onchange="schedulePreview()">
+                  <option value="">Toutes les saisons</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Pointure</label>
+                <select class="filter-select" id="f-shoe-size" onchange="schedulePreview()">
+                  <option value="">Toutes les pointures</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label>Niveau de pratique</label>
+                <select class="filter-select" id="f-practice-level" onchange="schedulePreview()">
+                  <option value="">Tous les niveaux</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Counter (shown in both modes) -->
+        <div class="recipient-counter" id="recipient-counter-wrap">
+          <div>
+            <div class="recipient-count-num" id="recipient-count">—</div>
+            <div class="recipient-count-label" id="recipient-count-label">destinataire(s) sélectionné(s)</div>
+          </div>
+          <div class="counter-actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleRecipientList()" id="btn-see-list">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Voir la liste
+            </button>
+            <button class="btn btn-ghost btn-sm" id="btn-reset" onclick="resetMode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              Réinitialiser
+            </button>
+          </div>
+        </div>
+
+        <!-- Recipient preview list -->
+        <div id="recipient-list-wrap">
+          <div id="recipient-list-inner"></div>
+        </div>
+      </div>
+
+      <!-- ── Composition ── -->
+      <div class="card" style="margin-top:20px">
+        <div class="section-label">Composer le message</div>
+
+        <div class="fg">
+          <label class="fl">Objet de l'email</label>
+          <input class="fi" type="text" id="msg-subject" placeholder="Ex : Informations rentrée 2025/2026" maxlength="200">
+        </div>
+
+        <div class="fg">
+          <label class="fl">Corps du message</label>
+
+          <!-- Toolbar -->
+          <div id="editor-toolbar">
+            <button class="toolbar-btn" title="Gras" onclick="execCmd('bold')"><b>B</b></button>
+            <button class="toolbar-btn" title="Italique" onclick="execCmd('italic')"><i>I</i></button>
+            <button class="toolbar-btn" title="Souligné" onclick="execCmd('underline')"><u>U</u></button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" title="Liste à puces" onclick="execCmd('insertUnorderedList')">☰</button>
+            <button class="toolbar-btn" title="Liste numérotée" onclick="execCmd('insertOrderedList')">1.</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" title="Insérer un lien" onclick="showLinkDialog()">🔗</button>
+            <button class="toolbar-btn" title="Supprimer le lien" onclick="execCmd('unlink')">✂</button>
+            <div class="toolbar-sep"></div>
+            <button class="toolbar-btn" title="Aligner gauche" onclick="execCmd('justifyLeft')">◀</button>
+            <button class="toolbar-btn" title="Centrer" onclick="execCmd('justifyCenter')">▶◀</button>
+          </div>
+
+          <!-- Link insert dialog -->
+          <div id="link-dialog" class="link-dialog">
+            <div class="fl" style="margin-bottom:8px">Texte du lien</div>
+            <input class="fi" id="link-text" type="text" placeholder="Texte affiché" style="margin-bottom:10px">
+            <div class="fl" style="margin-bottom:8px">URL</div>
+            <input class="fi" id="link-url" type="url" placeholder="https://...">
+            <div class="link-dialog-actions" style="margin-top:12px">
+              <button class="btn btn-ghost btn-sm" onclick="closeLinkDialog()">Annuler</button>
+              <button class="btn btn-primary btn-sm" onclick="insertLink()">Insérer</button>
+            </div>
+          </div>
+
+          <!-- Contenteditable body -->
+          <div id="editor-body" contenteditable="true" aria-label="Corps du message"></div>
+        </div>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-ghost" onclick="openPreview()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Aperçu email
+          </button>
+          <button class="btn btn-primary" id="btn-send" onclick="openConfirmSend()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <span id="btn-send-label">Envoyer</span>
+          </button>
+        </div>
+        <div id="validation-notice" style="display:none;margin-top:16px;padding:12px 16px;background:#fffbea;border:1.5px solid #f0c97f;border-radius:8px;font-size:13px;color:#92560a">
+          <strong>Circuit de validation actif.</strong>
+          Votre message sera soumis pour approbation avant envoi. Le validateur recevra une notification par email.
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ HISTORY TAB ═══════════════ -->
+    <div class="tab-panel" id="tab-history">
+      <div id="history-loading" class="loading-bar">
+        <div class="spinner-sm" style="margin:0 auto 12px"></div>
+        Chargement de l'historique…
+      </div>
+      <div id="history-empty" class="empty" style="display:none">
+        <div class="empty-icon">📭</div>
+        <div class="empty-text">Aucune campagne envoyée pour l'instant</div>
+      </div>
+      <div id="history-list"></div>
+
+      <!-- Campaign detail panel -->
+      <div id="campaign-detail" style="display:none">
+        <button class="btn btn-ghost btn-sm" onclick="closeCampaignDetail()" style="margin-bottom:20px">
+          ← Retour à l'historique
+        </button>
+        <div class="card">
+          <h3 id="cd-subject" style="font-size:22px;margin-bottom:6px">—</h3>
+          <div id="cd-meta" style="font-size:13px;color:var(--muted);margin-bottom:24px">—</div>
+
+          <div class="stats-row-mini" id="cd-stats"></div>
+
+          <div style="margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px">
+              <span>Taux d'ouverture</span>
+              <span id="cd-open-rate">—</span>
+            </div>
+            <div class="open-bar-wrap"><div class="open-bar" id="cd-open-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="section-label" style="margin-bottom:16px">Détail des destinataires</div>
+          <div style="overflow-x:auto">
+            <table>
+              <thead>
+                <tr>
+                  <th>Destinataire</th>
+                  <th>Email</th>
+                  <th>Statut</th>
+                  <th>Ouvert le</th>
+                </tr>
+              </thead>
+              <tbody id="cd-recipients"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ VALIDATION TAB ═══════════════ -->
+    <div class="tab-panel" id="tab-validation">
+      <div id="validation-loading" class="loading-bar">
+        <div class="spinner-sm" style="margin:0 auto 12px"></div>
+        Chargement…
+      </div>
+      <div id="validation-empty" class="empty" style="display:none">
+        <div class="empty-icon">✅</div>
+        <div class="empty-text">Aucun email en attente de validation</div>
+      </div>
+      <div id="validation-list"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ Email preview modal ═══ -->
+<div class="overlay" id="preview-modal">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-head">
+      <h3>Aperçu de l'email</h3>
+      <button class="modal-x" onclick="closeModal('preview-modal')">×</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div id="email-preview-frame">
+        <div class="preview-email-wrap">
+          <!-- Header: logo on white background (transparent PNG floats) -->
+          <div style="background:#ffffff;text-align:center;padding:32px 20px 24px">
+            <img src="https://pub-629428d185ca4960a0a73c850d32294b.r2.dev/company_98213/images/c14f688c-4f74-46d3-a097-a49cda1d65ec.png" alt="L'Académie" style="max-width:140px;height:auto">
+          </div>
+          <!-- Corps du message -->
+          <div class="preview-content" style="padding:0 40px 28px;font-size:15px;line-height:1.7;color:#333">
+            <div id="prev-body"></div>
+          </div>
+          <!-- Signatures bi-colonne -->
+          <div id="prev-signatures" style="padding:28px 40px 0;display:none">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="vertical-align:top;width:50%;padding-right:24px" id="prev-sig-left"></td>
+                <td style="padding:0 0 0 24px;border-left:1px solid #ece8e3;vertical-align:top;width:50%" id="prev-sig-right"></td>
+              </tr>
+            </table>
+          </div>
+          <!-- Bloc marque centré — spec verrouillée : logo + slogan Cormorant Garamond + 1965, noir sur blanc -->
+          <div style="text-align:center;padding:32px 40px 28px;border-top:1px solid #e0e0e0">
+            <img src="https://pub-629428d185ca4960a0a73c850d32294b.r2.dev/company_98213/images/c14f688c-4f74-46d3-a097-a49cda1d65ec.png" alt="L'Académie" style="max-width:80px;height:auto;display:block;margin:0 auto 12px">
+            <div style="font-family:'Cormorant Garamond',Georgia,'Times New Roman',serif;font-size:18px;color:#000000;font-style:italic;letter-spacing:0.02em;margin-bottom:8px">&#171;&#8201;Avec ou sans pointes&#8201;&#187;</div>
+            <div style="font-family:Arial,sans-serif;color:#000000;font-size:12px;letter-spacing:0.12em">1965</div>
+          </div>
+          <!-- Mentions légales -->
+          <div style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #ece8e3;text-align:center">
+            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af;line-height:1.8">
+              THERPSIKHOROS SAS<br>
+              24 rue Paul Pouget — 33470 Gujan-Mestras<br>
+              SIRET 833 749 344 00028 · Tél. 05 56 54 45 51<br>
+              <a href="https://lacademie.eu" style="color:#9ca3af;text-decoration:none">lacademie.eu</a>
+              · <a href="mailto:contact@lacademie.eu" style="color:#9ca3af;text-decoration:none">contact@lacademie.eu</a>
+            </div>
+          </div>
+          <!-- Lien RGPD -->
+          <div style="padding:12px 40px 24px;background:#f9f9f9;text-align:center">
+            <div style="font-family:Arial,sans-serif;font-size:11px;color:#9ca3af">
+              Vous recevez cet email car vous êtes inscrit(e) à L'Académie.
+              <a href="#" style="color:#9ca3af;text-decoration:underline">Se désinscrire</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('preview-modal')">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Confirm send modal ═══ -->
+<div class="overlay" id="confirm-send-modal">
+  <div class="modal" style="max-width:440px" id="confirm-send-modal-inner">
+    <div class="modal-head">
+      <h3>Confirmer l'envoi</h3>
+      <button class="modal-x" onclick="closeModal('confirm-send-modal')">×</button>
+    </div>
+    <div id="confirm-modal-content">
+      <div class="modal-body" style="text-align:center;padding:36px 28px">
+        <div class="big-num" id="confirm-count">—</div>
+        <p>destinataire(s) vont recevoir cet email.<br>Cette action est irréversible.</p>
+        <div id="confirm-subj-preview" style="margin-top:16px;padding:12px 16px;background:#f5f1ec;border-radius:8px;font-size:13px;font-weight:600;color:var(--slate)"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="closeModal('confirm-send-modal')">Annuler</button>
+        <button class="btn btn-primary" onclick="sendCampaign()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Envoyer maintenant
+        </button>
+      </div>
+    </div>
+    <div id="send-progress" style="padding:40px;text-align:center;display:none">
+      <div style="border: 3px solid #ece8e3; border-top: 3px solid var(--rose); border-radius: 50%; width: 48px; height: 48px; animation: spin 0.8s linear infinite; margin: 0 auto 16px;"></div>
+      <div style="font-weight:600;font-size:15px;color:var(--ink)">Envoi en cours…</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">Les emails sont envoyés par lots. Vous serez redirigé(e) vers l'historique.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Approve modal ═══ -->
+<div class="overlay" id="approve-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-head">
+      <h3>Approuver et envoyer</h3>
+      <button class="modal-x" onclick="closeModal('approve-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="approve-campaign-info" style="margin-bottom:20px;padding:14px 16px;background:#f5f1ec;border-radius:8px;font-size:13px;color:var(--slate)"></div>
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;font-weight:600;color:var(--ink)">
+        <input type="checkbox" id="approve-add-signature" style="width:16px;height:16px;accent-color:var(--rose)">
+        Ajouter ma signature à l'email
+      </label>
+      <p style="font-size:12px;color:var(--muted);margin-top:8px;margin-left:26px">
+        Votre nom et rôle apparaîtront dans le bloc signatures de l'email envoyé.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('approve-modal')">Annuler</button>
+      <button class="btn btn-approve" style="padding:10px 22px;font-size:14px" onclick="confirmApprove()">
+        ✓ Approuver et envoyer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Reject modal ═══ -->
+<div class="overlay" id="reject-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <h3>Rejeter l'email</h3>
+      <button class="modal-x" onclick="closeModal('reject-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:16px;font-size:14px;color:var(--slate)">
+        L'auteur recevra une notification et pourra recomposer l'email.
+      </p>
+      <label class="fl">Motif du rejet (optionnel)</label>
+      <textarea id="reject-reason" class="fi" style="min-height:80px;resize:vertical;font-family:inherit" placeholder="Ex : contenu à reformuler, audience trop large…"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal('reject-modal')">Annuler</button>
+      <button class="btn" style="background:var(--danger);color:#fff;padding:10px 22px;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer" onclick="confirmReject()">
+        Rejeter
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Toast ═══ -->
+<div id="toast"></div>
+
+<script>
+// ── Auth check ──────────────────────────────────────────────────────────────
+const token = localStorage.getItem('akademie_token');
+if (!token) { window.location.href = '/login'; }
+
+let currentUser = null;
+
+async function init() {
+  try {
+    const res = await api('GET', '/auth/me');
+    if (!res.ok) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    currentUser = data.user;
+
+    if (!currentUser || !['PRÉSIDENT','DIRECTRICE','PROFESSEUR'].includes(currentUser.role)) {
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    document.getElementById('user-info').style.display = '';
+    document.getElementById('user-greeting').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+    document.getElementById('user-role-badge').textContent = currentUser.role;
+
+    if (['PRÉSIDENT','DIRECTRICE'].includes(currentUser.role)) {
+      document.getElementById('nav-archives').style.display = '';
+      document.getElementById('nav-sante').style.display = '';
+    }
+    if (currentUser.role === 'PRÉSIDENT') {
+      document.getElementById('nav-users').style.display = '';
+    }
+
+    if (['PRÉSIDENT','DIRECTRICE'].includes(currentUser.role)) {
+      document.getElementById('tab-btn-validation').style.display = '';
+      refreshPendingCount();
+    }
+
+    if (currentUser.role !== 'PRÉSIDENT') {
+      document.getElementById('btn-send-label').textContent = 'Soumettre pour validation';
+      document.getElementById('validation-notice').style.display = '';
+    }
+
+    loadFilterOptions();
+    // Default mode is manual — counter starts empty (no auto-preview in manual mode)
+    updateCounter();
+  } catch (e) {
+    window.location.href = '/login';
+  }
+}
+
+// ── API helper ───────────────────────────────────────────────────────────────
+function api(method, path, body) {
+  const opts = { method, headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  return fetch(path, opts);
+}
+
+function doLogout() {
+  api('POST', '/auth/logout').finally(() => {
+    localStorage.removeItem('akademie_token');
+    window.location.href = '/login';
+  });
+}
+
+// ── Sidebar toggle ────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+  ['compose','history','validation'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('active', t === name);
+  });
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  ['compose','history','validation'].forEach((t, i) => {
+    if (t === name) {
+      const btn = t === 'validation'
+        ? document.getElementById('tab-btn-validation')
+        : document.querySelectorAll('.tab-btn')[i];
+      if (btn) btn.classList.add('active');
+    }
+  });
+  if (name === 'history') loadHistory();
+  if (name === 'validation') loadPending();
+}
+
+// ── Mode management ───────────────────────────────────────────────────────────
+// 'manual'  = À: field autocomplete
+// 'filter'  = segmentation filters
+
+let currentMode = 'manual';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('mode-manual').style.display = mode === 'manual' ? '' : 'none';
+  document.getElementById('mode-filter').style.display = mode === 'filter' ? '' : 'none';
+  document.getElementById('mode-btn-manual').classList.toggle('active', mode === 'manual');
+  document.getElementById('mode-btn-filter').classList.toggle('active', mode === 'filter');
+
+  hideRecipientList();
+
+  if (mode === 'manual') {
+    // Show counter based on manual selections
+    updateCounter();
+  } else {
+    // Run filter preview
+    runPreview();
+  }
+}
+
+// ── Secondary filters toggle ──────────────────────────────────────────────────
+let secondaryOpen = false;
+
+function toggleSecondaryFilters() {
+  secondaryOpen = !secondaryOpen;
+  document.getElementById('secondary-filters').classList.toggle('open', secondaryOpen);
+  document.getElementById('btn-secondary').classList.toggle('open', secondaryOpen);
+  const label = document.getElementById('btn-secondary-label');
+  label.textContent = secondaryOpen ? '− Moins de champs' : '+ de champs';
+  // Change icon
+  const btn = document.getElementById('btn-secondary');
+  const icon = btn.querySelector('svg');
+  if (secondaryOpen) {
+    icon.innerHTML = '<line x1="5" y1="12" x2="19" y2="12"/>';
+  } else {
+    icon.innerHTML = '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+  }
+}
+
+// ── Manual mode: « À : » autocomplete ────────────────────────────────────────
+let manualRecipients = []; // { id, first_name, last_name, email }
+let acTimer = null;
+let acFocusIdx = -1;
+
+function focusToInput() {
+  document.getElementById('to-input').focus();
+}
+
+function onToInput() {
+  const q = document.getElementById('to-input').value.trim();
+  clearTimeout(acTimer);
+  if (q.length < 2) { closeAutocomplete(); return; }
+  acTimer = setTimeout(() => fetchAutocomplete(q), 250);
+}
+
+async function fetchAutocomplete(q) {
+  try {
+    const res = await api('GET', `/api/messaging/autocomplete?q=${encodeURIComponent(q)}`);
+    if (!res.ok) return;
+    const { students } = await res.json();
+
+    // Filter out already-selected
+    const selectedIds = new Set(manualRecipients.map(r => r.id));
+    const filtered = students.filter(s => !selectedIds.has(s.id));
+
+    renderAutocomplete(filtered);
+  } catch (e) { closeAutocomplete(); }
+}
+
+function renderAutocomplete(students) {
+  const drop = document.getElementById('autocomplete-drop');
+  acFocusIdx = -1;
+
+  if (!students.length) {
+    drop.innerHTML = '<div class="ac-empty">Aucun résultat</div>';
+    drop.classList.add('open');
+    return;
+  }
+
+  drop.innerHTML = students.map((s, i) => {
+    const initials = ((s.first_name||'')[0]||'') + ((s.last_name||'')[0]||'');
+    return `<div class="ac-item" data-idx="${i}" data-id="${s.id}"
+              onmousedown="selectStudent(${i})"
+              onmouseover="setAcFocus(${i})">
+      <div class="ac-avatar">${escHtml(initials.toUpperCase())}</div>
+      <div>
+        <div class="ac-name">${escHtml(s.first_name)} ${escHtml(s.last_name)}</div>
+        <div class="ac-email">${escHtml(s.email)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Store students data on the drop element for keyboard nav
+  drop._students = students;
+  drop.classList.add('open');
+}
+
+function setAcFocus(idx) {
+  const items = document.querySelectorAll('#autocomplete-drop .ac-item');
+  items.forEach((el, i) => el.classList.toggle('focused', i === idx));
+  acFocusIdx = idx;
+}
+
+function selectStudent(idx) {
+  const drop = document.getElementById('autocomplete-drop');
+  const students = drop._students;
+  if (!students || !students[idx]) return;
+  addManualRecipient(students[idx]);
+  document.getElementById('to-input').value = '';
+  closeAutocomplete();
+}
+
+function addManualRecipient(student) {
+  if (manualRecipients.find(r => r.id === student.id)) return;
+  manualRecipients.push(student);
+  renderChips();
+  updateCounter();
+  hideRecipientList();
+}
+
+function removeManualRecipient(id) {
+  manualRecipients = manualRecipients.filter(r => r.id !== id);
+  renderChips();
+  updateCounter();
+}
+
+function renderChips() {
+  const chipsEl = document.getElementById('to-chips');
+  chipsEl.innerHTML = manualRecipients.map(r =>
+    `<span class="to-chip">
+      ${escHtml(r.first_name)} ${escHtml(r.last_name)}
+      <button class="to-chip-remove" onmousedown="event.preventDefault();removeManualRecipient(${r.id})" title="Retirer">×</button>
+    </span>`
+  ).join('');
+}
+
+function updateCounter() {
+  const count = manualRecipients.length;
+  document.getElementById('recipient-count').textContent = count > 0 ? count : '—';
+  document.getElementById('recipient-count-label').textContent =
+    count > 0 ? 'destinataire(s) sélectionné(s)' : 'aucun destinataire';
+}
+
+function onToKeydown(e) {
+  const drop = document.getElementById('autocomplete-drop');
+  const items = drop.querySelectorAll('.ac-item');
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acFocusIdx = Math.min(acFocusIdx + 1, items.length - 1);
+    setAcFocus(acFocusIdx);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acFocusIdx = Math.max(acFocusIdx - 1, 0);
+    setAcFocus(acFocusIdx);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (acFocusIdx >= 0 && drop._students && drop._students[acFocusIdx]) {
+      addManualRecipient(drop._students[acFocusIdx]);
+      document.getElementById('to-input').value = '';
+      closeAutocomplete();
+    }
+  } else if (e.key === 'Escape') {
+    closeAutocomplete();
+  } else if (e.key === 'Backspace' && !document.getElementById('to-input').value && manualRecipients.length) {
+    // Backspace on empty input removes last chip
+    removeManualRecipient(manualRecipients[manualRecipients.length - 1].id);
+  }
+}
+
+function closeAutocomplete() {
+  const drop = document.getElementById('autocomplete-drop');
+  drop.classList.remove('open');
+  drop._students = null;
+  acFocusIdx = -1;
+}
+
+// Close autocomplete on outside click
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('to-field-wrap');
+  if (wrap && !wrap.contains(e.target)) closeAutocomplete();
+});
+
+// ── Filter options ────────────────────────────────────────────────────────────
+let filterOptions = null;
+
+async function loadFilterOptions() {
+  try {
+    const res = await api('GET', '/api/messaging/filters/options');
+    if (!res.ok) return;
+    filterOptions = await res.json();
+
+    const fFormule = document.getElementById('f-formule');
+    filterOptions.formules.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id; opt.textContent = f.label; fFormule.appendChild(opt);
+    });
+
+    const fDiscipline = document.getElementById('f-discipline');
+    filterOptions.disciplines.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.id; opt.textContent = d.name; fDiscipline.appendChild(opt);
+    });
+
+    const fLocation = document.getElementById('f-location');
+    filterOptions.locations.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id; opt.textContent = l.city; fLocation.appendChild(opt);
+    });
+
+    const fMode = document.getElementById('f-mode');
+    filterOptions.modes_paiement.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m; opt.textContent = m; fMode.appendChild(opt);
+    });
+
+    const fSaison = document.getElementById('f-saison');
+    filterOptions.saisons.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = s.label; fSaison.appendChild(opt);
+    });
+
+    if (filterOptions.shoe_sizes && filterOptions.shoe_sizes.length) {
+      const fShoe = document.getElementById('f-shoe-size');
+      filterOptions.shoe_sizes.forEach(sz => {
+        const opt = document.createElement('option');
+        opt.value = sz; opt.textContent = sz; fShoe.appendChild(opt);
+      });
+    }
+
+    if (filterOptions.practice_levels && filterOptions.practice_levels.length) {
+      const fPractice = document.getElementById('f-practice-level');
+      filterOptions.practice_levels.forEach(lv => {
+        const opt = document.createElement('option');
+        opt.value = lv; opt.textContent = lv; fPractice.appendChild(opt);
+      });
+    }
+  } catch (e) {
+    console.warn('[messagerie] loadFilterOptions error', e);
+  }
+}
+
+// ── Filters (segmentation mode) ───────────────────────────────────────────────
+function getFilters() {
+  return {
+    nom:            document.getElementById('f-nom').value.trim()          || undefined,
+    prenom:         document.getElementById('f-prenom').value.trim()       || undefined,
+    formule_id:     document.getElementById('f-formule').value             ? parseInt(document.getElementById('f-formule').value) : undefined,
+    discipline_id:  document.getElementById('f-discipline').value          ? parseInt(document.getElementById('f-discipline').value) : undefined,
+    location_id:    document.getElementById('f-location').value            ? parseInt(document.getElementById('f-location').value)   : undefined,
+    sexe:           document.getElementById('f-sexe').value                || undefined,
+    payment_method: document.getElementById('f-mode').value               || undefined,
+    saison_id:      document.getElementById('f-saison').value              ? parseInt(document.getElementById('f-saison').value)     : undefined,
+    shoe_size:      document.getElementById('f-shoe-size').value           || undefined,
+    practice_level: document.getElementById('f-practice-level').value     || undefined,
+  };
+}
+
+function resetMode() {
+  if (currentMode === 'manual') {
+    manualRecipients = [];
+    renderChips();
+    updateCounter();
+    document.getElementById('to-input').value = '';
+    closeAutocomplete();
+    hideRecipientList();
+  } else {
+    resetFiltersInternal();
+    hideRecipientList();
+    runPreview();
+  }
+}
+
+// Kept for quick-segment chip compatibility
+function resetFilters() { resetMode(); }
+
+function applyQuickSegment(type) {
+  resetFiltersInternal();
+  if (type === 'arcachon' && filterOptions) {
+    const loc = filterOptions.locations.find(l => l.city.toLowerCase().includes('arcachon'));
+    if (loc) document.getElementById('f-location').value = loc.id;
+    document.getElementById('chip-arcachon').classList.add('active');
+  } else if (type === 'gujan' && filterOptions) {
+    const loc = filterOptions.locations.find(l => l.city.toLowerCase().includes('gujan'));
+    if (loc) document.getElementById('f-location').value = loc.id;
+    document.getElementById('chip-gujan').classList.add('active');
+  } else {
+    document.getElementById('chip-all').classList.add('active');
+  }
+  runPreview();
+}
+
+function resetFiltersInternal() {
+  ['f-nom','f-prenom','f-formule','f-discipline','f-location','f-sexe','f-mode','f-saison','f-shoe-size','f-practice-level'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['chip-all','chip-arcachon','chip-gujan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+}
+
+// ── Preview (recipient count — filter mode only) ──────────────────────────────
+let previewTimer = null;
+let lastRecipients = [];
+
+function schedulePreview() {
+  // Clear quick-chip highlights when manually filtering
+  ['chip-all','chip-arcachon','chip-gujan'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(runPreview, 400);
+}
+
+async function runPreview() {
+  document.getElementById('recipient-count').textContent = '…';
+  try {
+    const res = await api('POST', '/api/messaging/preview', { filters: getFilters() });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    lastRecipients = data.recipients;
+    document.getElementById('recipient-count').textContent = data.count;
+    document.getElementById('recipient-count-label').textContent = 'destinataire(s) sélectionné(s)';
+    refreshRecipientList();
+  } catch (e) {
+    document.getElementById('recipient-count').textContent = '—';
+  }
+}
+
+// ── Recipient list toggle ─────────────────────────────────────────────────────
+let listVisible = false;
+
+function toggleRecipientList() {
+  listVisible = !listVisible;
+  const wrap = document.getElementById('recipient-list-wrap');
+  wrap.classList.toggle('visible', listVisible);
+  document.getElementById('btn-see-list').innerHTML = listVisible
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg> Masquer la liste`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Voir la liste`;
+  if (listVisible) refreshRecipientList();
+}
+
+function hideRecipientList() {
+  listVisible = false;
+  const wrap = document.getElementById('recipient-list-wrap');
+  if (wrap) wrap.classList.remove('visible');
+  const btn = document.getElementById('btn-see-list');
+  if (btn) btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Voir la liste`;
+}
+
+function refreshRecipientList() {
+  const inner = document.getElementById('recipient-list-inner');
+  if (!listVisible) return;
+
+  // In manual mode, use manualRecipients directly
+  const list = currentMode === 'manual' ? manualRecipients : lastRecipients;
+
+  if (!list.length) {
+    inner.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Aucun destinataire</div>';
+    return;
+  }
+  inner.innerHTML = list.slice(0, 200).map(r => {
+    const initials = ((r.first_name||'')[0]||'') + ((r.last_name||'')[0]||'');
+    return `<div class="recipient-row">
+      <div class="recipient-avatar">${initials.toUpperCase()}</div>
+      <div class="recipient-name">${escHtml(r.first_name)} ${escHtml(r.last_name)}</div>
+      <div class="recipient-email">${escHtml(r.email)}</div>
+    </div>`;
+  }).join('') + (list.length > 200 ? `<div style="padding:12px 16px;text-align:center;font-size:12px;color:var(--muted)">… et ${list.length - 200} autres</div>` : '');
+}
+
+// ── Rich text editor ──────────────────────────────────────────────────────────
+function execCmd(cmd) {
+  document.getElementById('editor-body').focus();
+  document.execCommand(cmd, false, null);
+}
+
+let savedRange = null;
+
+function showLinkDialog() {
+  const sel = window.getSelection();
+  if (sel.rangeCount) savedRange = sel.getRangeAt(0).cloneRange();
+  const dialog = document.getElementById('link-dialog');
+  const selectedText = sel.toString();
+  document.getElementById('link-text').value = selectedText;
+  document.getElementById('link-url').value = '';
+  dialog.classList.add('visible');
+  document.getElementById('link-url').focus();
+}
+
+function closeLinkDialog() {
+  document.getElementById('link-dialog').classList.remove('visible');
+}
+
+function insertLink() {
+  const text = document.getElementById('link-text').value.trim();
+  const url  = document.getElementById('link-url').value.trim();
+  if (!url) { closeLinkDialog(); return; }
+
+  const editor = document.getElementById('editor-body');
+  editor.focus();
+
+  const sel = window.getSelection();
+  if (savedRange) {
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.textContent = text || url;
+  anchor.style.color = '#c44d56';
+
+  if (savedRange && !savedRange.collapsed) {
+    savedRange.deleteContents();
+  }
+  if (savedRange) {
+    savedRange.insertNode(anchor);
+    savedRange.setStartAfter(anchor);
+    savedRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  closeLinkDialog();
+}
+
+document.addEventListener('click', (e) => {
+  const dialog = document.getElementById('link-dialog');
+  if (dialog && dialog.classList.contains('visible') && !dialog.contains(e.target) && e.target.textContent !== '🔗') {
+    closeLinkDialog();
+  }
+});
+
+// ── Preview modal ─────────────────────────────────────────────────────────────
+function openPreview() {
+  const bodyHtml = document.getElementById('editor-body').innerHTML;
+  document.getElementById('prev-body').innerHTML = bodyHtml;
+
+  const sigLeft = document.getElementById('prev-sig-left');
+  const sigRight = document.getElementById('prev-sig-right');
+  const sigWrap = document.getElementById('prev-signatures');
+
+  if (currentUser) {
+    const role = currentUser.role;
+    const userName = `${currentUser.first_name} ${currentUser.last_name}`;
+
+    if (role === 'PRÉSIDENT') {
+      sigLeft.innerHTML = '';
+      sigRight.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0a">Grégory JOSEPH-SÉVERAC</div><div style="font-family:Arial,sans-serif;font-size:13px;color:#555">Président, THERPSIKHOROS SAS</div>`;
+      sigWrap.style.display = '';
+    } else if (role === 'DIRECTRICE') {
+      sigLeft.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0a">Anne-Lise BRICOGNE</div><div style="font-family:Arial,sans-serif;font-size:13px;color:#555">Directrice, L'Académie</div>`;
+      sigRight.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:13px;color:#999;font-style:italic">Signature Président (si validateur ajoute la sienne)</div>`;
+      sigWrap.style.display = '';
+    } else if (role === 'PROFESSEUR') {
+      sigLeft.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:14px;font-weight:700;color:#0a0a0a">${escHtml(userName)}</div><div style="font-family:Arial,sans-serif;font-size:13px;color:#555">Professeur, L'Académie</div>`;
+      sigRight.innerHTML = `<div style="font-family:Arial,sans-serif;font-size:13px;color:#999;font-style:italic">Signature Directrice (si validatrice ajoute la sienne)</div>`;
+      sigWrap.style.display = '';
+    } else {
+      sigWrap.style.display = 'none';
+    }
+  }
+
+  openModal('preview-modal');
+}
+
+// ── Confirm send / submit ────────────────────────────────────────────────────
+function openConfirmSend() {
+  const subject = document.getElementById('msg-subject').value.trim();
+  const body    = document.getElementById('editor-body').innerHTML.trim();
+
+  if (!subject) { showToast('Veuillez renseigner l\'objet', 'error'); return; }
+  if (!body || body === '') { showToast('Veuillez rédiger le message', 'error'); return; }
+
+  // Validate recipients depending on mode
+  let count;
+  if (currentMode === 'manual') {
+    count = manualRecipients.length;
+    if (count === 0) { showToast('Ajoutez au moins un destinataire dans le champ « À :»', 'error'); return; }
+  } else {
+    count = parseInt(document.getElementById('recipient-count').textContent, 10);
+    if (!count || count === 0) { showToast('Aucun destinataire correspondant aux filtres', 'error'); return; }
+  }
+
+  const isPresident = currentUser && currentUser.role === 'PRÉSIDENT';
+  document.getElementById('confirm-count').textContent = count;
+  document.getElementById('confirm-subj-preview').textContent = `📧 "${subject}"`;
+
+  const actionLabel = isPresident
+    ? 'vont recevoir cet email.<br>Cette action est irréversible.'
+    : 'destinataire(s) seront concerné(e)s.<br>L\'email sera soumis pour validation avant envoi.';
+  document.querySelector('#confirm-send-modal .modal-body p').innerHTML = actionLabel;
+  document.querySelector('#confirm-send-modal .modal-foot .btn-primary').innerHTML = isPresident
+    ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer maintenant`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Soumettre pour validation`;
+
+  document.getElementById('confirm-modal-content').style.display = '';
+  document.getElementById('send-progress').style.display = 'none';
+  openModal('confirm-send-modal');
+}
+
+async function sendCampaign() {
+  const subject   = document.getElementById('msg-subject').value.trim();
+  const body_html = document.getElementById('editor-body').innerHTML;
+
+  document.getElementById('confirm-modal-content').style.display = 'none';
+  document.getElementById('send-progress').style.display = 'block';
+
+  // Build payload depending on mode
+  let payload;
+  if (currentMode === 'manual') {
+    payload = { recipient_ids: manualRecipients.map(r => r.id), subject, body_html };
+  } else {
+    payload = { filters: getFilters(), subject, body_html };
+  }
+
+  try {
+    const res  = await api('POST', '/api/messaging/submit', payload);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    closeModal('confirm-send-modal');
+
+    if (data.status === 'pending_validation') {
+      showToast(`Soumis pour validation — ${data.recipients_count} destinataires`, 'info');
+      refreshPendingCount();
+    } else {
+      showToast(`Campagne lancée — ${data.recipients_count} emails en cours d'envoi`, 'success');
+    }
+    // Reset composer
+    manualRecipients = [];
+    renderChips();
+    updateCounter();
+    document.getElementById('editor-body').innerHTML = '';
+    document.getElementById('msg-subject').value = '';
+    setTimeout(() => switchTab('history'), 1500);
+  } catch (e) {
+    document.getElementById('confirm-modal-content').style.display = '';
+    document.getElementById('send-progress').style.display = 'none';
+    showToast(e.message || 'Erreur lors de l\'envoi', 'error');
+  }
+}
+
+// Email template is built server-side (buildEmailTemplate in routes/messaging.js).
+// Frontend sends raw body_html — server wraps with logo, signatures, legal, RGPD.
+
+// ── History ───────────────────────────────────────────────────────────────────
+async function loadHistory() {
+  document.getElementById('history-list').innerHTML = '';
+  document.getElementById('campaign-detail').style.display = 'none';
+  document.getElementById('history-list').style.display = '';
+  document.getElementById('history-loading').style.display = 'block';
+  document.getElementById('history-empty').style.display = 'none';
+
+  try {
+    const res = await api('GET', '/api/messaging/campaigns?per_page=50');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    document.getElementById('history-loading').style.display = 'none';
+
+    if (!data.campaigns.length) {
+      document.getElementById('history-empty').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('history-list').innerHTML = data.campaigns.map(c => {
+      const sentAt = c.sent_at ? new Date(c.sent_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Envoi en cours…';
+      const total = parseInt(c.recipients_count, 10) || 0;
+      const opened = parseInt(c.opened_count, 10) || 0;
+      const failed = parseInt(c.failed_count, 10) || 0;
+      const openRate = total > 0 ? Math.round((opened / total) * 100) : 0;
+
+      const statusBadge = {
+        'sent':               '<span class="badge badge-sent">Envoyé</span>',
+        'sending':            '<span class="badge badge-sending">En envoi…</span>',
+        'pending_validation': '<span class="badge badge-validation">En attente</span>',
+        'rejected':           '<span class="badge badge-rejected">Rejeté</span>',
+      }[c.status] || `<span class="badge badge-pending">${c.status}</span>`;
+
+      return `<div class="campaign-card" onclick="openCampaignDetail(${c.id})">
+        <div class="campaign-card-head">
+          <div class="campaign-subject">${escHtml(c.subject)}</div>
+          ${statusBadge}
+        </div>
+        <div class="campaign-meta">
+          <span class="campaign-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            ${sentAt}
+          </span>
+          <span class="campaign-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <strong>${total}</strong> destinataire(s)
+          </span>
+          <span class="campaign-stat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            <strong>${openRate}%</strong> ouverture
+          </span>
+          ${failed > 0 ? `<span class="campaign-stat" style="color:var(--danger)"><strong>${failed}</strong> échoué(s)</span>` : ''}
+          <span class="campaign-stat" style="color:var(--muted);font-size:12px">par ${escHtml(c.created_by_name || '—')}</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('history-loading').style.display = 'none';
+    showToast('Impossible de charger l\'historique', 'error');
+  }
+}
+
+async function openCampaignDetail(id) {
+  document.getElementById('history-list').style.display = 'none';
+  document.getElementById('history-loading').style.display = 'none';
+  document.getElementById('campaign-detail').style.display = 'block';
+
+  // Reset
+  document.getElementById('cd-subject').textContent = '…';
+  document.getElementById('cd-meta').textContent = '';
+  document.getElementById('cd-stats').innerHTML = '';
+  document.getElementById('cd-open-rate').textContent = '—';
+  document.getElementById('cd-open-bar').style.width = '0%';
+  document.getElementById('cd-recipients').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--muted)">Chargement…</td></tr>';
+
+  try {
+    const res = await api('GET', `/api/messaging/campaigns/${id}`);
+    if (!res.ok) throw new Error();
+    const { campaign, stats, recipients } = await res.json();
+
+    document.getElementById('cd-subject').textContent = campaign.subject;
+    const sentAt = campaign.sent_at ? new Date(campaign.sent_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'En cours d\'envoi';
+    document.getElementById('cd-meta').textContent = `Envoyé le ${sentAt} · par ${campaign.created_by_name || '—'} · de ${campaign.sender}`;
+
+    document.getElementById('cd-stats').innerHTML = `
+      <div class="stat-mini"><div class="stat-mini-val">${stats.total}</div><div class="stat-mini-label">Total</div></div>
+      <div class="stat-mini"><div class="stat-mini-val green">${stats.sent}</div><div class="stat-mini-label">Envoyés</div></div>
+      <div class="stat-mini"><div class="stat-mini-val gold">${stats.opened}</div><div class="stat-mini-label">Ouverts</div></div>
+      <div class="stat-mini"><div class="stat-mini-val red">${stats.failed}</div><div class="stat-mini-label">Échoués</div></div>
+      ${stats.pending > 0 ? `<div class="stat-mini"><div class="stat-mini-val">${stats.pending}</div><div class="stat-mini-label">En attente</div></div>` : ''}
+    `;
+
+    document.getElementById('cd-open-rate').textContent = `${stats.open_rate}%`;
+    setTimeout(() => { document.getElementById('cd-open-bar').style.width = `${stats.open_rate}%`; }, 100);
+
+    document.getElementById('cd-recipients').innerHTML = recipients.map(r => {
+      const statusBadge = {
+        sent:    '<span class="badge badge-sent">Envoyé</span>',
+        opened:  '<span class="badge badge-opened">Ouvert</span>',
+        failed:  '<span class="badge badge-failed">Échoué</span>',
+        pending: '<span class="badge badge-pending">En attente</span>',
+      }[r.status] || r.status;
+      const openedAt = r.opened_at ? new Date(r.opened_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '—';
+      return `<tr>
+        <td>${escHtml(r.first_name + ' ' + r.last_name)}</td>
+        <td style="color:var(--muted)">${escHtml(r.email)}</td>
+        <td>${statusBadge}</td>
+        <td style="color:var(--muted)">${openedAt}</td>
+      </tr>`;
+    }).join('');
+
+  } catch (e) {
+    document.getElementById('cd-recipients').innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--danger)">Erreur de chargement</td></tr>';
+  }
+}
+
+function closeCampaignDetail() {
+  document.getElementById('campaign-detail').style.display = 'none';
+  document.getElementById('history-list').style.display = '';
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// Close modals on backdrop click
+document.querySelectorAll('.overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast-${type}`;
+  t.style.display = 'flex';
+  t.style.animation = 'none';
+  void t.offsetWidth; // reflow
+  t.style.animation = 'toastIn 0.3s ease';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// ── Escape HTML ───────────────────────────────────────────────────────────────
+function escHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Validation tab ────────────────────────────────────────────────────────────
+let pendingActiveCampaignId = null;
+
+async function refreshPendingCount() {
+  try {
+    const res = await api('GET', '/api/messaging/pending');
+    if (!res.ok) return;
+    const data = await res.json();
+    const count = data.pending.length;
+    const badge = document.getElementById('tab-pending-count');
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) { /* non-fatal */ }
+}
+
+async function loadPending() {
+  document.getElementById('validation-loading').style.display = 'block';
+  document.getElementById('validation-empty').style.display = 'none';
+  document.getElementById('validation-list').innerHTML = '';
+
+  try {
+    const res = await api('GET', '/api/messaging/pending');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    document.getElementById('validation-loading').style.display = 'none';
+
+    if (!data.pending.length) {
+      document.getElementById('validation-empty').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('validation-list').innerHTML = data.pending.map(c => {
+      const createdAt = new Date(c.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+      return `<div class="pending-card">
+        <div style="flex:1;min-width:0">
+          <span class="pending-badge">En attente de validation</span>
+          <div class="pending-subject" style="margin-top:6px">${escHtml(c.subject)}</div>
+          <div class="pending-meta">
+            De : <strong>${escHtml(c.author_name)}</strong> (${escHtml(c.author_role)})
+            · ${c.recipients_count} destinataire(s) · Soumis le ${createdAt}
+          </div>
+        </div>
+        <div class="pending-actions">
+          <button class="btn-reject" onclick="openRejectModal(${c.id}, '${escHtml(c.subject).replace(/'/g,"\\'")}')">Rejeter</button>
+          <button class="btn-approve" onclick="openApproveModal(${c.id}, '${escHtml(c.subject).replace(/'/g,"\\'")}', ${c.recipients_count})">✓ Approuver</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    document.getElementById('validation-loading').style.display = 'none';
+    showToast('Impossible de charger les validations', 'error');
+  }
+}
+
+function openApproveModal(id, subject, count) {
+  pendingActiveCampaignId = id;
+  document.getElementById('approve-campaign-info').innerHTML =
+    `<strong>Objet :</strong> ${escHtml(subject)}<br><span style="color:var(--muted)">${count} destinataire(s)</span>`;
+  document.getElementById('approve-add-signature').checked = false;
+  openModal('approve-modal');
+}
+
+async function confirmApprove() {
+  const id = pendingActiveCampaignId;
+  const addSig = document.getElementById('approve-add-signature').checked;
+  closeModal('approve-modal');
+
+  try {
+    const res = await api('POST', `/api/messaging/approve/${id}`, { add_signature: addSig });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    showToast('Approuvé — envoi lancé', 'success');
+    refreshPendingCount();
+    loadPending();
+  } catch (e) {
+    showToast(e.message || 'Erreur lors de l\'approbation', 'error');
+  }
+}
+
+function openRejectModal(id, subject) {
+  pendingActiveCampaignId = id;
+  document.getElementById('reject-reason').value = '';
+  openModal('reject-modal');
+}
+
+async function confirmReject() {
+  const id = pendingActiveCampaignId;
+  const reason = document.getElementById('reject-reason').value.trim();
+  closeModal('reject-modal');
+
+  try {
+    const res = await api('POST', `/api/messaging/reject/${id}`, { reason });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+    showToast('Email rejeté — l\'auteur a été notifié', 'info');
+    refreshPendingCount();
+    loadPending();
+  } catch (e) {
+    showToast(e.message || 'Erreur lors du rejet', 'error');
+  }
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

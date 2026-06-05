@@ -1,0 +1,9 @@
+
+runtime = "node"
+start = "npm start"
+build = "npm install --include=dev && npm run build --if-present"
+port_env_var = "PORT"
+healthcheck_path = "/api/health"
+
+[env]
+DATABASE_URL = { source = "rdbms" }

@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Migration formules</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a; --info: #0369a1;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info { margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px; }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--gold); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn { background: none; border: none; color: rgba(255,255,255,0.35); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* === HAMBURGER === */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; max-width: 1100px; }
+    .view-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; flex-wrap: wrap; gap: 16px; }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .subtitle { color: var(--slate); font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #222; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid #ddd8d2; }
+    .btn-ghost:hover:not(:disabled) { background: rgba(0,0,0,0.04); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover:not(:disabled) { filter: brightness(0.9); transform: translateY(-1px); }
+
+    .card { background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-header h3 { font-size: 16px; font-weight: 700; }
+
+    /* Stats grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-box { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .stat-box .value { font-size: 32px; font-weight: 800; font-family: 'Syne', sans-serif; line-height: 1; }
+    .stat-box .label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 6px; }
+    .stat-auto .value { color: var(--success); }
+    .stat-famille .value { color: var(--info); }
+    .stat-suggest .value { color: var(--warning); }
+    .stat-manual .value { color: var(--rose); }
+
+    /* Sections */
+    .section { margin-bottom: 28px; }
+    .section-title {
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-green { background: var(--success); }
+    .dot-blue { background: var(--info); }
+    .dot-orange { background: var(--warning); }
+    .dot-red { background: var(--rose); }
+    .dot-gray { background: #aaa; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 0 12px 10px; }
+    td { padding: 11px 12px; border-top: 1px solid #f0ede8; font-size: 13px; vertical-align: middle; }
+    tr:hover td { background: #faf8f5; }
+    .empty-row td { color: var(--muted); font-style: italic; text-align: center; padding: 20px; }
+
+    /* Tags */
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    }
+    .tag-auto { background: #dcfce7; color: #166534; }
+    .tag-famille { background: #e0f2fe; color: #0369a1; }
+    .tag-suggest { background: #fef3c7; color: #92400e; }
+    .tag-manual { background: #fee2e2; color: #991b1b; }
+    .tag-2cours { background: #f5f3ff; color: #5b21b6; }
+
+    /* Controls */
+    .controls { display: flex; gap: 12px; align-items: center; margin-bottom: 32px; flex-wrap: wrap; }
+    .controls .info-note {
+      flex: 1; background: #f0f9ff; border: 1px solid #bae6fd;
+      border-radius: 8px; padding: 12px 16px; font-size: 13px; color: var(--info);
+      line-height: 1.5; min-width: 260px;
+    }
+
+    /* Loading spinner */
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Alert boxes */
+    .alert { border-radius: 8px; padding: 14px 18px; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
+    .alert-warning { background: #fef9ec; border: 1px solid #f6d860; color: #744210; }
+    .alert-success { background: #f0fdf4; border: 1px solid #86efac; color: #14532d; }
+    .alert-info { background: #f0f9ff; border: 1px solid #bae6fd; color: #0369a1; }
+
+    .run-date { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* Collapsible sections */
+    .collapse-toggle { cursor: pointer; user-select: none; }
+    .collapse-toggle::after { content: ' ▾'; font-size: 11px; opacity: 0.6; }
+    .collapse-toggle.collapsed::after { content: ' ▸'; }
+    .collapse-body { overflow: hidden; }
+    .collapse-body.hidden { display: none; }
+
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 8px;
+      font-size: 14px; font-weight: 500; z-index: 999;
+      transition: opacity 0.3s; opacity: 0; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: var(--danger); }
+    .toast.ok { background: var(--success); }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .main { margin-left: 0; padding: 24px 20px; padding-top: 68px; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .view-header { flex-direction: column; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .controls { flex-direction: column; }
+      table { min-width: 500px; }
+      .card { overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/users">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link active" href="/admin/migration-formules">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Migration formules
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h2>Migration formules — Saison 2025/2026</h2>
+        <div class="run-date" id="last-run-info"></div>
+      </div>
+    </div>
+    <p class="subtitle">
+      Réinterprétation de la colonne tarifaire du fichier source (303 élèves).<br>
+      Les montants annuels de la feuille PAIEMENTS sont utilisés pour déduire la formule de chaque élève,<br>
+      détecter les groupes Illimité famille, et marquer les 2 cours/semaine.
+    </p>
+
+    <!-- Mapping reference -->
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-header" style="margin-bottom:12px;">
+        <h3>Table de correspondance montant → formule</h3>
+      </div>
+      <table>
+        <thead><tr><th>Montant (col D)</th><th>Formule déduite</th><th>2 cours/semaine</th><th>Confiance</th><th>Détail</th></tr></thead>
+        <tbody>
+          <tr><td>275 €</td><td>Éveil et Initiation</td><td>Non</td><td><span class="tag tag-auto">Auto</span></td><td>25€ inscription + 25€×10 mois</td></tr>
+          <tr><td>295 €</td><td>Préparatoire</td><td>Non</td><td><span class="tag tag-auto">Auto</span></td><td>25€ inscription + 27€×10 mois</td></tr>
+          <tr><td>325 €</td><td>Collectif standard</td><td>Non</td><td><span class="tag tag-auto">Auto</span></td><td>25€ inscription + 30€×10 mois</td></tr>
+          <tr><td>565 €</td><td>Préparatoire</td><td><span class="tag tag-2cours">Oui</span></td><td><span class="tag tag-auto">Auto</span></td><td>25€ + 2×27€×10 mois</td></tr>
+          <tr><td>595 €</td><td>Collectif standard</td><td><span class="tag tag-2cours">Oui</span></td><td><span class="tag tag-suggest">À confirmer</span></td><td>25€ + (27+30)€×10 mois — mix Prépa+Collectif</td></tr>
+          <tr><td>625 €</td><td>Collectif standard</td><td><span class="tag tag-2cours">Oui</span></td><td><span class="tag tag-auto">Auto</span></td><td>25€ + 2×30€×10 mois</td></tr>
+          <tr><td>725 €</td><td>Illimité solo</td><td>Non</td><td><span class="tag tag-auto">Auto</span></td><td>25€ inscription + 70€×10 mois</td></tr>
+          <tr><td>950 €</td><td>Illimité famille</td><td>Non</td><td><span class="tag tag-famille">Famille 2 pers.</span></td><td>50€ inscriptions + 90€×10 mois</td></tr>
+          <tr><td>975 €</td><td>Illimité famille</td><td>Non</td><td><span class="tag tag-famille">Famille 3 pers.</span></td><td>75€ inscriptions + 90€×10 mois</td></tr>
+          <tr><td>Autres</td><td>—</td><td>—</td><td><span class="tag tag-manual">Revue manuelle</span></td><td>Montant non reconnu automatiquement</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Access check -->
+    <div id="access-denied" style="display:none;" class="alert alert-warning">
+      ⚠️ Cette page est réservée au PRÉSIDENT.
+    </div>
+
+    <div id="page-content" style="display:none;">
+
+      <!-- Action zone -->
+      <div class="controls">
+        <div class="info-note">
+          <strong>Mode prévisualisation</strong> : lecture seule, aucune donnée modifiée.<br>
+          <strong>Lancer la migration</strong> : applique les changements en base et enregistre le rapport.
+        </div>
+        <button class="btn btn-ghost" id="btn-preview" onclick="runPreview()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Prévisualiser
+        </button>
+        <button class="btn btn-danger" id="btn-run" onclick="confirmRun()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Lancer la migration
+        </button>
+      </div>
+
+      <!-- Report area -->
+      <div id="report-area" style="display:none;">
+
+        <div id="mode-badge" class="alert" style="margin-bottom:20px;"></div>
+
+        <!-- Stats -->
+        <div class="stats-grid" id="stats-grid"></div>
+
+        <!-- Auto updated -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('auto')">
+              <span class="dot dot-green" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              Mises à jour automatiques
+              <span id="auto-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body" id="auto-body">
+            <table>
+              <thead><tr><th>Élève</th><th>Formule attribuée</th><th>2 cours</th><th>Montant source</th><th>Note</th></tr></thead>
+              <tbody id="auto-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Famille groupes -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('famille')">
+              <span class="dot dot-blue" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              Groupes Illimité famille créés
+              <span id="famille-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body" id="famille-body">
+            <table>
+              <thead><tr><th>Titulaire</th><th>Montant</th><th>Bénéficiaires</th></tr></thead>
+              <tbody id="famille-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manual review: suggestions -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('suggest')">
+              <span class="dot dot-orange" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              À confirmer manuellement
+              <span id="suggest-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body" id="suggest-body">
+            <table>
+              <thead><tr><th>Élève</th><th>Montant source</th><th>Formule suggérée</th><th>Raison</th></tr></thead>
+              <tbody id="suggest-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Manual review: famille flagged -->
+        <div class="card" id="famille-flagged-card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('famille-flag')">
+              <span class="dot dot-orange" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              Groupes famille incomplets (vérification manuelle)
+              <span id="famille-flag-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body" id="famille-flag-body">
+            <table>
+              <thead><tr><th>Titulaire</th><th>Montant</th><th>Problème</th><th>Bénéficiaires trouvés</th></tr></thead>
+              <tbody id="famille-flag-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- No montant (not identified) -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('no-montant')">
+              <span class="dot dot-red" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              Sans montant identifié (revue manuelle)
+              <span id="no-montant-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body hidden" id="no-montant-body">
+            <table>
+              <thead><tr><th>Élève</th><th>Note</th></tr></thead>
+              <tbody id="no-montant-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Not found -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="collapse-toggle" onclick="toggleSection('notfound')">
+              <span class="dot dot-gray" style="display:inline-block;margin-right:6px;vertical-align:middle;"></span>
+              Non trouvés dans la base
+              <span id="notfound-count" style="font-weight:400;color:var(--muted);font-size:13px;"></span>
+            </h3>
+          </div>
+          <div class="collapse-body hidden" id="notfound-body">
+            <table>
+              <thead><tr><th>Nom (source)</th><th>Prénom</th><th>Montant</th></tr></thead>
+              <tbody id="notfound-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /report-area -->
+    </div><!-- /page-content -->
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const _authToken = localStorage.getItem('akademie_token');
+let currentUser = null;
+
+if (!_authToken) {
+  window.location.replace('/login');
+}
+
+function authHeaders(extra) {
+  return Object.assign({ 'Authorization': 'Bearer ' + _authToken, 'Content-Type': 'application/json' }, extra || {});
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const r = await fetch(`${API}/auth/me`, { headers: authHeaders() });
+    if (!r.ok) { window.location.replace('/login'); return; }
+    const d = await r.json();
+    currentUser = d.user;
+    if (currentUser.role !== 'PRÉSIDENT') {
+      document.getElementById('access-denied').style.display = '';
+      return;
+    }
+    document.getElementById('user-greeting').textContent = currentUser.first_name || currentUser.email;
+    document.getElementById('user-role').textContent = currentUser.role;
+    document.getElementById('page-content').style.display = '';
+    // Load last report if any
+    loadLastReport();
+  } catch(e) {
+    window.location.replace('/login');
+  }
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+function logout() {
+  fetch(`${API}/auth/logout`, { method:'POST', headers: authHeaders() })
+    .finally(() => {
+      localStorage.removeItem('akademie_token');
+      localStorage.removeItem('akademie_user');
+      window.location.replace('/login');
+    });
+}
+
+// ── Last report ───────────────────────────────────────────────────────────────
+async function loadLastReport() {
+  try {
+    const r = await fetch(`${API}/api/admin/migration-formules/last-report`, { headers: authHeaders() });
+    const d = await r.json();
+    if (d.report) {
+      const dt = new Date(d.run_at).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+      document.getElementById('last-run-info').textContent = `Dernière migration : ${dt} par ${d.run_by || '—'}`;
+      renderReport(d.report, 'run');
+    }
+  } catch(e) { /* no report yet */ }
+}
+
+// ── Preview ───────────────────────────────────────────────────────────────────
+async function runPreview() {
+  const btn = document.getElementById('btn-preview');
+  const reportArea = document.getElementById('report-area');
+  const badge = document.getElementById('mode-badge');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:var(--ink);border-color:rgba(0,0,0,0.2);border-top-color:var(--ink);"></span> Chargement…';
+
+  // Show loading state in report area immediately
+  reportArea.style.display = '';
+  badge.className = 'alert alert-info';
+  badge.innerHTML = '<span class="spinner" style="border-color:rgba(3,105,161,0.3);border-top-color:var(--info);width:14px;height:14px;vertical-align:middle;margin-right:8px;"></span> Chargement de la prévisualisation… (peut prendre 10-15 secondes)';
+  document.getElementById('stats-grid').innerHTML = '';
+  reportArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    const r = await fetch(`${API}/api/admin/migration-formules/preview`, { headers: authHeaders() });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error || 'Erreur serveur');
+    renderReport(d.report, 'preview');
+    showToast('Prévisualisation chargée', 'ok');
+  } catch(e) {
+    badge.className = 'alert alert-warning';
+    badge.textContent = '⚠️ Erreur : ' + e.message;
+    showToast('Erreur : ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Prévisualiser`;
+  }
+}
+
+// ── Confirm + Run ─────────────────────────────────────────────────────────────
+function confirmRun() {
+  if (!confirm('Lancer la migration ?\n\nCela va mettre à jour les formules des élèves dans la base de données.\nCette action est irréversible (mais non destructive — aucune donnée n\'est supprimée).')) return;
+  doRun();
+}
+
+async function doRun() {
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Migration en cours…';
+  try {
+    const r = await fetch(`${API}/api/admin/migration-formules/run`, { method: 'POST', headers: authHeaders() });
+    const d = await r.json();
+    if (!d.success) throw new Error(d.error || 'Erreur');
+    renderReport(d.report, 'run');
+    const dt = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+    document.getElementById('last-run-info').textContent = `Dernière migration : ${dt}`;
+    showToast(`Migration terminée — ${d.report.stats.total_auto} élèves mis à jour`, 'ok');
+  } catch(e) {
+    showToast('Erreur : ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polygon points="5 3 19 12 5 21 5 3"/></svg> Lancer la migration`;
+  }
+}
+
+// ── Render report ─────────────────────────────────────────────────────────────
+function renderReport(r, mode) {
+  document.getElementById('report-area').style.display = '';
+
+  const badge = document.getElementById('mode-badge');
+  if (mode === 'preview') {
+    badge.className = 'alert alert-info';
+    badge.textContent = '👁 Mode prévisualisation — aucune modification effectuée en base.';
+  } else {
+    badge.className = 'alert alert-success';
+    badge.textContent = `✅ Migration exécutée — ${r.stats.total_auto} formule(s) attribuée(s) automatiquement, ${r.stats.total_famille} groupe(s) famille créé(s).`;
+  }
+
+  // Stats
+  const stats = r.stats;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-box stat-auto"><div class="value">${stats.total_auto}</div><div class="label">Auto-attribués</div></div>
+    <div class="stat-box stat-famille"><div class="value">${stats.total_famille}</div><div class="label">Groupes famille</div></div>
+    <div class="stat-box stat-suggest"><div class="value">${stats.total_suggest}</div><div class="label">À confirmer</div></div>
+    <div class="stat-box stat-manual"><div class="value">${stats.total_manual + (r.no_montant||[]).length}</div><div class="label">Revue manuelle</div></div>
+    <div class="stat-box"><div class="value" style="color:var(--muted)">${r.total_sheet_rows}</div><div class="label">Lignes source</div></div>
+  `;
+
+  // Auto updated
+  const autoTb = document.getElementById('auto-tbody');
+  document.getElementById('auto-count').textContent = ` (${(r.auto_updated||[]).length})`;
+  if ((r.auto_updated||[]).length === 0) {
+    autoTb.innerHTML = '<tr class="empty-row"><td colspan="5">Aucune mise à jour automatique</td></tr>';
+  } else {
+    autoTb.innerHTML = (r.auto_updated||[]).map(e => `
+      <tr>
+        <td><strong>${esc(e.nom)}</strong> ${esc(e.prenom)}</td>
+        <td>${esc(e.formule)}</td>
+        <td>${e.deux_cours_semaine ? '<span class="tag tag-2cours">Oui</span>' : '—'}</td>
+        <td>${e.montant ? e.montant + ' €' : '—'}</td>
+        <td style="color:var(--muted);font-size:12px;">${esc(e.note || '')}</td>
+      </tr>`).join('');
+  }
+
+  // Famille groupes created
+  const famTb = document.getElementById('famille-tbody');
+  document.getElementById('famille-count').textContent = ` (${(r.famille_groupes_created||[]).length})`;
+  if ((r.famille_groupes_created||[]).length === 0) {
+    famTb.innerHTML = '<tr class="empty-row"><td colspan="3">Aucun groupe créé</td></tr>';
+  } else {
+    famTb.innerHTML = (r.famille_groupes_created||[]).map(e => `
+      <tr>
+        <td><strong>${esc(e.titulaire_nom)}</strong> ${esc(e.titulaire_prenom)}</td>
+        <td>${e.montant} €</td>
+        <td>${(e.benefs_trouvés||[]).map(b => `${esc(b.nom)} ${esc(b.prenom)}`).join(', ') || '—'}</td>
+      </tr>`).join('');
+  }
+
+  // Suggestions (manual confirm)
+  const sugTb = document.getElementById('suggest-tbody');
+  document.getElementById('suggest-count').textContent = ` (${(r.suggested||[]).length})`;
+  if ((r.suggested||[]).length === 0) {
+    sugTb.innerHTML = '<tr class="empty-row"><td colspan="4">Aucune suggestion en attente</td></tr>';
+  } else {
+    sugTb.innerHTML = (r.suggested||[]).map(e => `
+      <tr>
+        <td><strong>${esc(e.nom)}</strong> ${esc(e.prenom)}</td>
+        <td>${e.montant ? e.montant + ' €' : '—'}</td>
+        <td>${e.formule_suggested ? esc(e.formule_suggested) : '—'}</td>
+        <td style="font-size:12px;color:var(--slate);">${esc(e.reason||'')}</td>
+      </tr>`).join('');
+  }
+
+  // Famille flagged
+  const ffTb = document.getElementById('famille-flag-tbody');
+  document.getElementById('famille-flag-count').textContent = ` (${(r.famille_benef_flagged||[]).length})`;
+  if ((r.famille_benef_flagged||[]).length === 0) {
+    ffTb.innerHTML = '<tr class="empty-row"><td colspan="4">Aucun groupe incomplet</td></tr>';
+    document.getElementById('famille-flagged-card').style.opacity = '0.6';
+  } else {
+    ffTb.innerHTML = (r.famille_benef_flagged||[]).map(e => `
+      <tr>
+        <td><strong>${esc(e.titulaire_nom)}</strong> ${esc(e.titulaire_prenom)}</td>
+        <td>${e.montant} €</td>
+        <td style="color:var(--warning);font-size:12px;">${esc(e.reason||'')}</td>
+        <td>${(e.benefs_trouvés||[]).map(b => `${esc(b.nom)} ${esc(b.prenom)}`).join(', ') || '—'}</td>
+      </tr>`).join('');
+  }
+
+  // No montant
+  const nmTb = document.getElementById('no-montant-tbody');
+  document.getElementById('no-montant-count').textContent = ` (${(r.no_montant||[]).length})`;
+  if ((r.no_montant||[]).length === 0) {
+    nmTb.innerHTML = '<tr class="empty-row"><td colspan="2">Aucun</td></tr>';
+  } else {
+    nmTb.innerHTML = (r.no_montant||[]).map(e => `
+      <tr>
+        <td><strong>${esc(e.nom)}</strong> ${esc(e.prenom)}</td>
+        <td style="font-size:12px;color:var(--muted);">Montant absent dans la feuille source</td>
+      </tr>`).join('');
+  }
+
+  // Not found
+  const nfTb = document.getElementById('notfound-tbody');
+  document.getElementById('notfound-count').textContent = ` (${(r.not_found||[]).length})`;
+  if ((r.not_found||[]).length === 0) {
+    nfTb.innerHTML = '<tr class="empty-row"><td colspan="3">Tous les élèves ont été retrouvés</td></tr>';
+  } else {
+    nfTb.innerHTML = (r.not_found||[]).map(e => `
+      <tr>
+        <td>${esc(e.nom)}</td>
+        <td>${esc(e.prenom)}</td>
+        <td>${e.montant ? e.montant + ' €' : '—'}</td>
+      </tr>`).join('');
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleSection(id) {
+  const bodyMap = {
+    'auto': 'auto-body', 'famille': 'famille-body', 'suggest': 'suggest-body',
+    'famille-flag': 'famille-flag-body', 'no-montant': 'no-montant-body', 'notfound': 'notfound-body'
+  };
+  const toggleMap = {
+    'auto': 'auto-body', 'famille': 'famille-body', 'suggest': 'suggest-body',
+    'famille-flag': 'famille-flag-body', 'no-montant': 'no-montant-body', 'notfound': 'notfound-body'
+  };
+  const body = document.getElementById(bodyMap[id]);
+  if (!body) return;
+  body.classList.toggle('hidden');
+  const toggle = body.previousElementSibling.querySelector('.collapse-toggle');
+  if (toggle) toggle.classList.toggle('collapsed');
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = 'toast'; }, 4000);
+}
+
+init();
+</script>
+</body>
+</html>

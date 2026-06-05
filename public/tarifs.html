@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang='fr'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Tarifs & Planning — L'Académie Joseph-Séverac</title>
+    <link href='https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap' rel='stylesheet'>
+    <style>
+        :root {
+            --ink: #0a0a0a;
+            --cream: #faf8f5;
+            --cream-deep: #f0eae3;
+            --rose: #c44d56;
+            --rose-light: #e8949a;
+            --rose-pale: #f9e8ea;
+            --gold: #c9a96e;
+            --slate: #555;
+            --muted: #999;
+            --border: rgba(0,0,0,0.07);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* === NAVIGATION === */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            background: rgba(250, 248, 245, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+
+        .nav-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--ink);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-brand span {
+            color: var(--rose);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--slate);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--rose);
+        }
+
+        .nav-cta {
+            padding: 0.55rem 1.3rem;
+            background: var(--ink);
+            color: #fff !important;
+            border-radius: 6px;
+            font-size: 0.75rem !important;
+            transition: background 0.2s !important;
+        }
+
+        .nav-cta:hover {
+            background: var(--rose) !important;
+        }
+
+        /* === HERO === */
+        .page-hero {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            background: linear-gradient(180deg, var(--cream) 0%, var(--cream-deep) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--rose-light) 50%, transparent 100%);
+            opacity: 0.5;
+        }
+
+        .page-hero .section-tag {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--rose);
+            margin-bottom: 1.5rem;
+        }
+
+        .page-hero h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+        }
+
+        .page-hero h1 em {
+            font-style: italic;
+            color: var(--rose);
+        }
+
+        .page-hero p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: var(--slate);
+            max-width: 540px;
+            margin: 0 auto 2rem;
+            font-weight: 300;
+        }
+
+        .trial-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--rose-pale);
+            border: 1px solid var(--rose-light);
+            color: var(--rose);
+            padding: 0.6rem 1.2rem;
+            border-radius: 100px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* === PRICING SECTION === */
+        .pricing-section {
+            padding: 6rem 2rem;
+            background: var(--cream);
+        }
+
+        .section-header {
+            max-width: 1100px;
+            margin: 0 auto 3rem;
+        }
+
+        .section-header .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(1.5rem, 3vw, 2.2rem);
+            font-weight: 700;
+            color: var(--ink);
+            line-height: 1.2;
+        }
+
+        .pricing-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .pricing-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            transition: box-shadow 0.25s ease, transform 0.25s ease;
+        }
+
+        .pricing-card:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+
+        .pricing-card.featured {
+            border-color: var(--rose);
+            box-shadow: 0 0 0 1px var(--rose), 0 4px 20px rgba(196, 77, 86, 0.1);
+        }
+
+        .pricing-card.featured::before {
+            content: 'Le plus populaire';
+            position: absolute;
+            top: -1px; left: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            background: var(--rose);
+            color: #fff;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.35rem 0.9rem;
+            border-radius: 100px;
+        }
+
+        .discipline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .discipline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .discipline-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            color: var(--slate);
+        }
+
+        .pricing-card.featured .discipline-name {
+            margin-top: 0.75rem;
+        }
+
+        .price-block {
+            margin-bottom: 1.25rem;
+        }
+
+        .price-main {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .price-main .currency {
+            font-size: 1.2rem;
+            font-weight: 600;
+            vertical-align: top;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+
+        .price-main .period {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        .price-note {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+
+        .price-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.25rem 0;
+        }
+
+        .price-alt {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .price-alt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .price-alt-label {
+            font-size: 0.8rem;
+            color: var(--slate);
+        }
+
+        .price-alt-value {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .price-alt-value.saving {
+            color: var(--rose);
+        }
+
+        .card-footer {
+            margin-top: 1.5rem;
+        }
+
+        .card-cta {
+            display: block;
+            text-align: center;
+            padding: 0.8rem 1.5rem;
+            background: var(--ink);
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-radius: 7px;
+            transition: background 0.2s;
+            letter-spacing: 0.02em;
+        }
+
+        .card-cta:hover {
+            background: var(--rose);
+        }
+
+        .card-cta.outline {
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid var(--border);
+        }
+
+        .card-cta.outline:hover {
+            border-color: var(--rose);
+            color: var(--rose);
+            background: var(--rose-pale);
+        }
+
+        /* === TRIAL BANNER === */
+        .trial-banner {
+            max-width: 1100px;
+            margin: 0 auto 4rem;
+            background: var(--ink);
+            border-radius: 16px;
+            padding: 3rem;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .trial-banner h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .trial-banner p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+        }
+
+        .trial-banner .trial-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--rose);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            width: fit-content;
+        }
+
+        /* === SCHEDULE SECTION === */
+        .schedule-section {
+            padding: 6rem 2rem;
+            background: var(--cream-deep);
+        }
+
+        .schedule-filters {
+            max-width: 1100px;
+            margin: 0 auto 2.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1.1rem;
+            border-radius: 100px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            color: var(--slate);
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--ink);
+            color: #fff;
+            border-color: var(--ink);
+        }
+
+        .schedule-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            overflow-x: auto;
+        }
+
+        .schedule-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+        }
+
+        .schedule-table thead th {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 2px solid rgba(0,0,0,0.08);
+        }
+
+        .schedule-table thead th:first-child {
+            width: 90px;
+        }
+
+        .schedule-table thead th:nth-child(2) {
+            width: 100px;
+        }
+
+        .day-group {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .day-header {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #fff;
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 1rem 0 0.5rem;
+        }
+
+        .day-group-row td {
+            padding: 0.3rem 1rem 0.3rem 0;
+            vertical-align: middle;
+        }
+
+        .schedule-row {
+            transition: background 0.2s;
+        }
+
+        .schedule-row:hover {
+            background: rgba(196, 77, 86, 0.03);
+        }
+
+        .schedule-row td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .schedule-row td:first-child {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .time-range {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--ink);
+        }
+
+        .discipline-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'Syne', sans-serif;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.35rem 0.7rem;
+            border-radius: 5px;
+            white-space: nowrap;
+        }
+
+        .level-text {
+            font-size: 0.82rem;
+            color: var(--slate);
+        }
+
+        .teacher-text {
+            font-size: 0.82rem;
+            color: var(--slate);
+        }
+
+        .location-text {
+            font-size: 0.78rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .location-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--gold);
+        }
+
+        .empty-schedule {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* === ENROLLMENT CTA === */
+        .enroll-section {
+            padding: 6rem 2rem;
+            background: var(--ink);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .enroll-section::before {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, rgba(196,77,86,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .enroll-inner {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .enroll-section .section-label {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 1.5rem;
+        }
+
+        .enroll-section h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .enroll-section h2 em {
+            font-style: italic;
+            color: var(--rose-light);
+        }
+
+        .enroll-section > .enroll-inner > p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        .enroll-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 1rem 2.5rem;
+            background: var(--rose);
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .enroll-cta:hover {
+            background: #b03d46;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(196, 77, 86, 0.35);
+        }
+
+        .enroll-note {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 1.25rem;
+        }
+
+        /* === FOOTER === */
+        footer {
+            padding: 2.5rem 2rem;
+            background: var(--ink);
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        footer p {
+            font-family: 'Syne', sans-serif;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+            letter-spacing: 0.08em;
+        }
+
+        footer span { color: var(--rose-light); }
+
+        /* === MOBILE === */
+        @media (max-width: 768px) {
+            .nav-links { gap: 1rem; }
+            .nav-links .nav-links:not(:last-child) { display: none; }
+            .page-hero { padding: 7rem 1.5rem 3rem; }
+            .pricing-section, .schedule-section { padding: 4rem 1.5rem; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .trial-banner { grid-template-columns: 1fr; padding: 2rem; }
+            .enroll-section { padding: 4rem 1.5rem; }
+            .schedule-table { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+    <div class='nav-inner'>
+        <a href='/' class='nav-brand'>L'Académie <span>Joseph-Séverac</span></a>
+        <div class='nav-links'>
+            <a href='/'>Accueil</a>
+            <a href='/tarifs' class='active'>Tarifs &amp; Planning</a>
+            <a href='/dashboard'>Tableau de bord</a>
+            <a href='#enroll' class='nav-cta'>S'inscrire</a>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class='page-hero'>
+    <div class='section-tag'>Tarifs &amp; Planning</div>
+    <h1>Des prix transparents. <em>Zéro mauvaise surprise.</em></h1>
+    <p>Nous sommes la première école de danse du Bassin d'Arcachon à publier nos tarifs en ligne. Pas de frais cachés, pas de surprises — tout est là pour vous décider en toute sérénité.</p>
+    <div class='trial-pill'>
+        <svg width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg>
+        1ère séance d'essai gratuite — sans engagement
+    </div>
+</section>
+
+<!-- Pricing Cards -->
+<section class='pricing-section'>
+    <div class='section-header'>
+        <div class='section-label'>Nos tarifs</div>
+        <h2>Un tarif adapté à chaque discipline</h2>
+    </div>
+
+    <div class='pricing-grid'>
+
+        <!-- Classique -->
+        <div class='pricing-card featured'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#c44d56'></div>
+                <div class='discipline-name'>Classique & Ballet</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>55
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>2 cours hebdo inclus</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€150</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€500 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta'>S'inscrire — Classique</a>
+            </div>
+        </div>
+
+        <!-- Jazz -->
+        <div class='pricing-card'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#c9a96e'></div>
+                <div class='discipline-name'>Jazz</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>50
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>2 cours hebdo inclus</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€135</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€450 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta outline'>S'inscrire — Jazz</a>
+            </div>
+        </div>
+
+        <!-- Contemporain -->
+        <div class='pricing-card'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#5b8a72'></div>
+                <div class='discipline-name'>Contemporain</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>50
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>2 cours hebdo inclus</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€135</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€450 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta outline'>S'inscrire — Contemporain</a>
+            </div>
+        </div>
+
+        <!-- Hip-Hop -->
+        <div class='pricing-card'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#4a7fb5'></div>
+                <div class='discipline-name'>Hip-Hop & Street</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>45
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>2 cours hebdo inclus</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€120</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€420 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta outline'>S'inscrire — Hip-Hop</a>
+            </div>
+        </div>
+
+        <!-- Modern Jazz -->
+        <div class='pricing-card'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#8b5cf6'></div>
+                <div class='discipline-name'>Modern Jazz</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>50
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>2 cours hebdo inclus</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€135</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€450 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta outline'>S'inscrire — Modern Jazz</a>
+            </div>
+        </div>
+
+        <!-- Enfants / Eveil -->
+        <div class='pricing-card'>
+            <div class='discipline-badge'>
+                <div class='discipline-dot' style='background:#f59e0b'></div>
+                <div class='discipline-name'>Éveil &amp; Initiation</div>
+            </div>
+            <div class='price-block'>
+                <div class='price-main'>
+                    <span class='currency'>€</span>40
+                    <span class='period'>/ mois</span>
+                </div>
+                <div class='price-note'>1 à 2 cours hebdo</div>
+            </div>
+            <div class='price-divider'></div>
+            <div class='price-alt'>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Trimestriel</span>
+                    <span class='price-alt-value'>€105</span>
+                </div>
+                <div class='price-alt-row'>
+                    <span class='price-alt-label'>Annuel</span>
+                    <span class='price-alt-value saving'>€360 <small style='font-size:0.7em;color:var(--muted);font-weight:400'>/ an</small></span>
+                </div>
+            </div>
+            <div class='card-footer'>
+                <a href='#enroll' class='card-cta outline'>S'inscrire — Enfants</a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Drop-in + notes -->
+    <div style='max-width:1100px;margin:2.5rem auto 0;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:flex-start;'>
+        <div style='flex:1;min-width:280px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.5rem;'>
+            <div style='font-family:Syne,sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem'>Cours isolés</div>
+            <div style='font-family:Syne,sans-serif;font-size:1.8rem;font-weight:800;color:var(--ink)'>€18 <span style='font-size:0.9rem;font-weight:400;color:var(--muted)'>la séance</span></div>
+            <div style='font-size:0.85rem;color:var(--slate);margin-top:0.5rem'>Accès limité à 3 séances avant inscription requise.</div>
+        </div>
+        <div style='flex:1;min-width:280px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.5rem;'>
+            <div style='font-family:Syne,sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem'>Réductions</div>
+            <div style='font-size:0.9rem;color:var(--slate);line-height:1.7'>
+                <strong style='color:var(--ink)'>Frères &amp; sœurs :</strong> —15% sur le 2e inscrit<br>
+                <strong style='color:var(--ink)'>2 disciplines :</strong> —10% sur la 2e discipline<br>
+                <strong style='color:var(--ink)'>Paiement annuel :</strong> 2 mois offerts
+            </div>
+        </div>
+        <div style='flex:1;min-width:280px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.5rem;'>
+            <div style='font-family:Syne,sans-serif;font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem'>Mode de paiement</div>
+            <div style='font-size:0.9rem;color:var(--slate);line-height:1.7'>
+                Prélèvement bancaire mensuel<br>
+                Chèque ou espèces (trimestriel/annuel)<br>
+                CESU et Chèque Vacances acceptés
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Schedule Grid -->
+<section class='schedule-section'>
+    <div class='section-header'>
+        <div class='section-label'>Emploi du temps</div>
+        <h2>Horaires par site</h2>
+    </div>
+
+    <div class='schedule-filters'>
+        <span class='filter-label'>Site :</span>
+        <button class='filter-btn active' data-location=''>Tous</button>
+        <button class='filter-btn' data-location='1'>Gujan-Mestras</button>
+        <button class='filter-btn' data-location='2'>Arcachon</button>
+    </div>
+
+    <div class='schedule-grid'>
+        <table class='schedule-table'>
+            <thead>
+                <tr>
+                    <th>Horaire</th>
+                    <th>Discipline</th>
+                    <th>Niveau</th>
+                    <th>Professeur</th>
+                    <th>Lieu</th>
+                </tr>
+            </thead>
+            <tbody id='schedule-body'>
+                <tr><td colspan='5' class='empty-schedule'>Chargement de l'emploi du temps…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Enrollment CTA -->
+<section class='enroll-section' id='enroll'>
+    <div class='enroll-inner'>
+        <div class='section-label'>Inscription</div>
+        <h2>Prêt à commencer <em>votre parcours ?</em></h2>
+        <p>Réservez votre séance d'essai gratuite. Sans engagement. Nous vous guiderons vers la discipline et le niveau qui vous correspondent.</p>
+        <a href='mailto:contact@lacademie.fr?subject=Demande%20d%27inscription&body=Bonjour,%20je%20souhaiterais%20réserver%20une%20séance%20d%27essai%20gratuite.%0A%0ANom%20:%0APrénom%20:%0ADiscipline%20souhaitée%20:%0ASite%20préféré%20(Gujan%20ou%20Arcachon)%20:' class='enroll-cta'>
+            Réserver ma séance d'essai
+            <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><line x1='5' y1='12' x2='19' y2='12'/><polyline points='12 5 19 12 12 19'/></svg>
+        </a>
+        <div class='enroll-note'>Réponse sous 24h — Pas de formulaire complexe, un simple email suffit.</div>
+    </div>
+</section>
+
+<footer>
+    <p>L'Académie Joseph-Séverac — Bassin d'Arcachon — <span>AcadémieOS par Polsia</span></p>
+</footer>
+
+<script>
+const DAY_NAMES = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const DAY_COLORS = ['#c44d56','#c9a96e','#5b8a72','#4a7fb5','#8b5cf6','#e8949a','#d97706'];
+
+function formatTime(t) {
+    return t.slice(0,5);
+}
+
+async function loadSchedule(locationId) {
+    const tbody = document.getElementById('schedule-body');
+    tbody.innerHTML = '<tr><td colspan=\\'5\\' class=\\'empty-schedule\\'>Chargement…</td></tr>';
+
+    try {
+        let url = '/api/classes';
+        if (locationId) url += '?location_id=' + locationId;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Failed');
+        const classes = await res.json();
+
+        if (!classes.length) {
+            tbody.innerHTML = '<tr><td colspan=\\'5\\' class=\\'empty-schedule\\'>Aucun cours trouvé pour ce site.</td></tr>';
+            return;
+        }
+
+        // Group by day of week
+        const days = {};
+        for (let i = 0; i <= 6; i++) days[i] = [];
+
+        classes.forEach(c => {
+            if (days[c.day_of_week] !== undefined) {
+                days[c.day_of_week].push(c);
+            }
+        });
+
+        let html = '';
+        for (let d = 1; d <= 6; d++) {
+            const dayClasses = days[d];
+            if (!dayClasses || !dayClasses.length) continue;
+
+            const color = DAY_COLORS[(d-1) % DAY_COLORS.length];
+            const dayName = DAY_NAMES[d-1];
+
+            html += `<tr><td colspan='5' style='padding-top:1.5rem;padding-bottom:0'><span class='day-header' style='background:${color}'>${dayName}</span></td></tr>`;
+
+            dayClasses.forEach(c => {
+                const timeRange = formatTime(c.start_time) + ' – ' + formatTime(c.end_time);
+                const tagBg = c.discipline_color + '22';
+                const tagColor = c.discipline_color;
+                html += `<tr class='schedule-row'>
+                    <td><span class='time-range'>${timeRange}</span></td>
+                    <td><span class='discipline-tag' style='background:${tagBg};color:${tagColor}'>
+                        <span style='width:7px;height:7px;border-radius:50%;background:${tagColor};display:inline-block;flex-shrink:0'></span>
+                        ${c.discipline_name}
+                    </span></td>
+                    <td><span class='level-text'>${c.level || 'Tous niveaux'}</span></td>
+                    <td><span class='teacher-text'>${c.teacher_name || '—'}</span></td>
+                    <td><span class='location-text'>
+                        <span class='location-dot'></span>
+                        ${c.location_name || c.location_city || '—'}
+                    </span></td>
+                </tr>`;
+            });
+        }
+
+        tbody.innerHTML = html;
+    } catch(err) {
+        tbody.innerHTML = '<tr><td colspan=\\'5\\' class=\\'empty-schedule\\'>Erreur de chargement. Veuillez rafraîchir la page.</td></tr>';
+    }
+}
+
+// Filter buttons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        loadSchedule(btn.dataset.location);
+    });
+});
+
+// Initial load
+loadSchedule('');
+</script>
+
+</body>
+</html>

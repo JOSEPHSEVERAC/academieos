@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Activation du compte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --success: #2d8a4e;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .wrapper { width: 100%; max-width: 440px; padding: 24px; }
+
+    .brand { text-align: center; margin-bottom: 40px; }
+    .brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand span { color: var(--rose); }
+
+    .card {
+      background: #fff; border-radius: 16px; padding: 40px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card h2 { font-size: 20px; margin-bottom: 8px; }
+    .card .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+
+    .welcome-name {
+      background: #f0fdf4; border-radius: 10px; padding: 14px 18px;
+      margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+    }
+    .welcome-name .avatar {
+      width: 40px; height: 40px; border-radius: 50%; background: var(--ink);
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px; flex-shrink: 0;
+    }
+    .welcome-name .info { flex: 1; }
+    .welcome-name .name { font-weight: 600; font-size: 15px; }
+    .welcome-name .role {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--success); margin-top: 2px;
+    }
+
+    .fg { margin-bottom: 20px; }
+    .fg label { display: block; font-size: 13px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .fg input {
+      width: 100%; padding: 12px 16px; border: 1.5px solid #e5e3de; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--ink);
+      background: var(--cream); outline: none; transition: border-color 0.2s;
+    }
+    .fg input:focus { border-color: var(--rose); background: #fff; }
+    .form-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .strength-bar {
+      height: 4px; border-radius: 2px; background: #e5e3de;
+      margin-top: 8px; overflow: hidden;
+    }
+    .strength-bar-fill { height: 100%; transition: width 0.3s, background 0.3s; width: 0; }
+
+    .btn {
+      width: 100%; padding: 14px; border: none; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-card {
+      background: #fff1f2; border: 1.5px solid #f87171; border-radius: 12px; padding: 24px;
+      text-align: center;
+    }
+    .error-card h2 { color: #dc2626; font-size: 18px; margin-bottom: 8px; }
+    .error-card p { color: #555; font-size: 14px; line-height: 1.5; }
+
+    .success-card { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 28px; text-align: center; }
+    .success-card .check { font-size: 36px; margin-bottom: 12px; }
+    .success-card h2 { color: var(--success); font-size: 20px; margin-bottom: 8px; }
+    .success-card p { color: #555; font-size: 14px; line-height: 1.5; }
+
+    .msg { padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+    .msg-error { background: #fff1f2; color: #dc2626; }
+
+    #loading { text-align: center; color: var(--muted); padding: 20px 0; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="brand">
+    <h1>Académie<span>OS</span></h1>
+  </div>
+
+  <div id="loading">Vérification du lien…</div>
+
+  <div class="card" id="error-view" style="display:none">
+    <div class="error-card">
+      <h2>Lien invalide ou expiré</h2>
+      <p>Ce lien d'invitation n'est plus valide.<br>Contactez votre administrateur pour recevoir un nouveau lien.</p>
+    </div>
+  </div>
+
+  <div class="card" id="form-view" style="display:none">
+    <h2 id="page-title">Activer votre compte</h2>
+    <p class="subtitle" id="page-subtitle">Choisissez votre mot de passe pour accéder à AcadémieOS.</p>
+
+    <div class="welcome-name" id="welcome-block">
+      <div class="avatar" id="user-avatar">—</div>
+      <div class="info">
+        <div class="name" id="user-name">—</div>
+        <div class="role" id="user-role">—</div>
+      </div>
+    </div>
+
+    <div id="error-msg" class="msg msg-error" style="display:none"></div>
+
+    <div class="fg">
+      <label>Mot de passe <span style="color:var(--rose)">*</span></label>
+      <input type="password" id="password" placeholder="8 caractères minimum" autocomplete="new-password">
+      <div class="strength-bar"><div class="strength-bar-fill" id="strength-fill"></div></div>
+      <p class="form-hint" id="strength-label">Entrez un mot de passe</p>
+    </div>
+    <div class="fg">
+      <label>Confirmer le mot de passe <span style="color:var(--rose)">*</span></label>
+      <input type="password" id="password-confirm" placeholder="Répétez le mot de passe" autocomplete="new-password">
+    </div>
+
+    <button class="btn btn-primary" id="submit-btn" onclick="submitForm()">
+      <span id="btn-label">Activer mon compte</span>
+    </button>
+  </div>
+
+  <div class="card" id="success-view" style="display:none">
+    <div class="success-card">
+      <div class="check">✓</div>
+      <h2 id="success-title">Compte activé !</h2>
+      <p id="success-text">Votre compte est prêt. Redirection en cours…</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  const isReset = params.get('type') === 'reset';
+
+  let userData = null;
+
+  async function init() {
+    if (!token) {
+      showError();
+      return;
+    }
+    try {
+      const res = await fetch(`/api/invite/validate/${token}`);
+      if (!res.ok) { showError(); return; }
+      const data = await res.json();
+      userData = data;
+      renderForm(data);
+    } catch (_) {
+      showError();
+    }
+  }
+
+  function showError() {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-view').style.display = '';
+  }
+
+  function renderForm(u) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('form-view').style.display = '';
+
+    if (isReset) {
+      document.getElementById('page-title').textContent = 'Nouveau mot de passe';
+      document.getElementById('page-subtitle').textContent = 'Choisissez votre nouveau mot de passe pour vous connecter.';
+      document.getElementById('btn-label').textContent = 'Mettre à jour le mot de passe';
+    }
+
+    const initials = `${(u.first_name || '?')[0]}${(u.last_name || '?')[0]}`.toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+    document.getElementById('user-name').textContent = `${u.first_name} ${u.last_name}`;
+    document.getElementById('user-role').textContent = u.role;
+  }
+
+  // Password strength indicator
+  document.addEventListener('DOMContentLoaded', () => {
+    const pwInput = document.getElementById('password');
+    if (pwInput) {
+      pwInput.addEventListener('input', () => {
+        const val = pwInput.value;
+        const fill = document.getElementById('strength-fill');
+        const label = document.getElementById('strength-label');
+        let strength = 0;
+        if (val.length >= 8) strength++;
+        if (val.length >= 12) strength++;
+        if (/[A-Z]/.test(val) && /[a-z]/.test(val)) strength++;
+        if (/[0-9]/.test(val)) strength++;
+        if (/[^A-Za-z0-9]/.test(val)) strength++;
+        const levels = [
+          { width: '0%', color: '#e5e3de', text: 'Entrez un mot de passe' },
+          { width: '25%', color: '#f87171', text: 'Trop court' },
+          { width: '50%', color: '#f97316', text: 'Faible' },
+          { width: '75%', color: '#facc15', text: 'Moyen' },
+          { width: '90%', color: '#4ade80', text: 'Bon' },
+          { width: '100%', color: '#22c55e', text: 'Excellent' },
+        ];
+        const l = levels[Math.min(strength, 5)];
+        fill.style.width = val.length === 0 ? '0%' : l.width;
+        fill.style.background = l.color;
+        label.textContent = val.length === 0 ? 'Entrez un mot de passe' : l.text;
+      });
+    }
+  });
+
+  async function submitForm() {
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('password-confirm').value;
+    const errEl = document.getElementById('error-msg');
+
+    errEl.style.display = 'none';
+
+    if (!password || password.length < 8) {
+      errEl.textContent = 'Le mot de passe doit contenir au moins 8 caractères.';
+      errEl.style.display = '';
+      return;
+    }
+    if (password !== confirm) {
+      errEl.textContent = 'Les mots de passe ne correspondent pas.';
+      errEl.style.display = '';
+      return;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    document.getElementById('btn-label').textContent = isReset ? 'Mise à jour…' : 'Activation…';
+
+    try {
+      const res = await fetch('/api/invite/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+
+      document.getElementById('form-view').style.display = 'none';
+      document.getElementById('success-view').style.display = '';
+
+      if (data.first_time) {
+        // First-time invitation: save session and redirect to onboarding
+        localStorage.setItem('akademie_token', data.token);
+        localStorage.setItem('akademie_user', JSON.stringify(data.user));
+        document.getElementById('success-title').textContent = 'Compte activé !';
+        document.getElementById('success-text').textContent = 'Votre compte est prêt. Redirection en cours…';
+        setTimeout(() => { window.location.replace('/onboarding'); }, 1200);
+      } else {
+        // Password reset: no session — must reconnect with 2FA
+        document.getElementById('success-title').textContent = 'Mot de passe mis à jour !';
+        document.getElementById('success-text').textContent = 'Veuillez vous reconnecter avec votre nouveau mot de passe et votre code 2FA.';
+        setTimeout(() => { window.location.replace('/login'); }, 2500);
+      }
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.style.display = '';
+      btn.disabled = false;
+      document.getElementById('btn-label').textContent = isReset ? 'Mettre à jour le mot de passe' : 'Activer mon compte';
+    }
+  }
+
+  // Allow Enter key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitForm();
+  });
+
+  init();
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Configuration initiale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --slate: #555; --muted: #999; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif; background: var(--cream);
+      color: var(--ink); min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3 { font-family: 'Syne', sans-serif; font-weight: 700; }
+    .wrapper { width: 100%; max-width: 480px; padding: 24px; }
+    .brand { text-align: center; margin-bottom: 40px; }
+    .brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand span { color: var(--rose); }
+    .brand p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+    .card {
+      background: #fff; border-radius: 16px; padding: 40px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff8e6; color: #b45309; border-radius: 6px;
+      padding: 4px 10px; font-size: 12px; font-weight: 600; margin-bottom: 20px;
+    }
+    .card h2 { font-size: 20px; margin-bottom: 8px; }
+    .card .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .fg { margin-bottom: 18px; }
+    .fg label { display: block; font-size: 13px; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+    .fg input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #e5e3de; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      color: var(--ink); background: var(--cream); outline: none;
+      transition: border-color 0.2s;
+    }
+    .fg input:focus { border-color: var(--rose); background: #fff; }
+    .fg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .btn {
+      width: 100%; padding: 13px; background: var(--ink); color: #fff;
+      border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; margin-top: 8px;
+    }
+    .btn:hover { background: #222; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .error-msg {
+      background: #fee2e2; color: #b91c1c; border-radius: 8px;
+      padding: 12px 16px; font-size: 14px; margin-bottom: 16px; display: none;
+    }
+    .error-msg.show { display: block; }
+    .success-msg {
+      background: #f0fdf4; color: #166534; border-radius: 8px;
+      padding: 16px; font-size: 14px; margin-bottom: 16px; display: none; text-align: center;
+    }
+    .success-msg.show { display: block; }
+    .success-msg h3 { font-size: 16px; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="brand">
+      <h1>Académie<span>OS</span></h1>
+      <p>Configuration initiale du système</p>
+    </div>
+    <div class="card">
+      <div class="badge">⚙️ Première configuration</div>
+      <h2>Créer le compte PRÉSIDENT</h2>
+      <p class="subtitle">Aucun compte administrateur n'existe encore. Créez le compte du représentant légal de THERPSIKHOROS SAS.</p>
+
+      <div class="error-msg" id="error-msg"></div>
+      <div class="success-msg" id="success-msg">
+        <h3>Compte créé ✓</h3>
+        <p>Redirection vers la connexion…</p>
+      </div>
+
+      <form id="setup-form">
+        <div class="fg-row">
+          <div class="fg">
+            <label for="first_name">Prénom</label>
+            <input type="text" id="first_name" placeholder="Grégory" required>
+          </div>
+          <div class="fg">
+            <label for="last_name">Nom</label>
+            <input type="text" id="last_name" placeholder="Nom" required>
+          </div>
+        </div>
+        <div class="fg">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="president@academie.fr" required>
+        </div>
+        <div class="fg">
+          <label for="password">Mot de passe (8 caractères minimum)</label>
+          <input type="password" id="password" placeholder="••••••••••" required minlength="8">
+        </div>
+        <button type="submit" class="btn" id="submit-btn">Créer le compte PRÉSIDENT →</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('setup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const errorEl = document.getElementById('error-msg');
+      const successEl = document.getElementById('success-msg');
+      errorEl.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Création…';
+
+      try {
+        const res = await fetch('/setup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value.trim(),
+            first_name: document.getElementById('first_name').value.trim(),
+            last_name: document.getElementById('last_name').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Erreur';
+          errorEl.classList.add('show');
+          return;
+        }
+        document.getElementById('setup-form').style.display = 'none';
+        successEl.classList.add('show');
+        setTimeout(() => window.location.replace('/login'), 2000);
+      } catch (err) {
+        errorEl.textContent = 'Erreur serveur. Réessayez.';
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Créer le compte PRÉSIDENT →';
+      }
+    });
+  </script>
+</body>
+</html>

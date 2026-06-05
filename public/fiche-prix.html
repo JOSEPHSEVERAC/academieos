@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Fiche des prix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info {
+      margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px;
+    }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--rose-light); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+      padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .view-header-sub { color: var(--slate); font-size: 14px; margin-top: 4px; }
+
+    .btn {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary { background: var(--ink); color: #fff; }
+    .btn-primary:hover { background: #222; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid #ddd8d2; }
+    .btn-ghost:hover { background: rgba(0,0,0,0.04); }
+
+    /* ── Price sheet ── */
+    .price-sheet {
+      max-width: 700px; margin: 0 auto; background: #fff;
+      border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .ps-banner {
+      background: var(--ink); color: #fff; padding: 14px 24px;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px;
+      text-align: center; letter-spacing: 0.02em;
+    }
+
+    .ps-inscription {
+      text-align: center; padding: 18px 24px 12px;
+      font-size: 15px; font-weight: 600;
+    }
+
+    .ps-section-banner {
+      background: var(--ink); color: #fff; padding: 10px 24px;
+      font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+      text-align: center;
+    }
+
+    .ps-sub-banner {
+      background: #333; color: #fff; padding: 8px 24px;
+      font-style: italic; font-size: 12px; font-weight: 600;
+    }
+
+    .ps-note-center {
+      text-align: center; font-style: italic; font-size: 12px; color: var(--slate);
+      padding: 8px 24px 4px;
+    }
+
+    .ps-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 10px 24px 4px; gap: 12px;
+    }
+    .ps-line-label { font-size: 14px; flex: 1; }
+    .ps-line-dots {
+      flex: 1; border-bottom: 1px dotted #ccc; margin: 0 4px; min-width: 30px;
+      align-self: flex-end; margin-bottom: 4px;
+    }
+    .ps-line-price { font-weight: 700; font-size: 15px; white-space: nowrap; }
+
+    .ps-line-annual {
+      padding: 0 24px 10px; font-size: 11px; color: var(--muted); font-style: italic;
+    }
+
+    .ps-disciplines {
+      padding: 10px 24px 4px; font-size: 13px; line-height: 1.5;
+    }
+    .ps-disciplines .price-tag {
+      display: block; text-align: right; font-weight: 700; font-size: 15px;
+      margin-top: 4px; color: var(--ink);
+    }
+    .ps-disciplines .annual-tag {
+      display: block; text-align: right; font-size: 11px; color: var(--muted);
+      font-style: italic; margin-bottom: 6px;
+    }
+
+    .ps-unite-price {
+      text-align: center; font-weight: 700; font-size: 20px;
+      padding: 12px 24px 6px;
+    }
+
+    .ps-footnote {
+      padding: 6px 24px 18px; font-size: 11px; font-style: italic; color: var(--slate);
+    }
+
+    .ps-footer {
+      border-top: 1px solid #eee; padding: 20px 24px; text-align: center;
+      font-size: 12px; color: var(--slate); line-height: 1.7;
+    }
+    .ps-footer strong { color: var(--ink); }
+    .ps-footer .logo-wrap {
+      margin: 10px 0 4px; display: flex; align-items: center;
+      justify-content: center; gap: 16px;
+    }
+    .ps-footer .logo-wrap img { height: 40px; }
+
+    .ps-divider { height: 1px; background: #f0ede8; margin: 6px 24px; }
+
+    /* Loading skeleton */
+    .skeleton { background: linear-gradient(90deg, #f0ede8 25%, #e8e4de 50%, #f0ede8 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 6px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Mobile sidebar */
+    .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 99; }
+    .sidebar-overlay.visible { display: block; }
+    .hamburger { display: none; position: fixed; top: 14px; left: 14px; z-index: 101; background: var(--ink); color: #fff; border: none; border-radius: 8px; width: 40px; height: 40px; font-size: 20px; cursor: pointer; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 70px 16px 24px; }
+      .hamburger { display: flex; align-items: center; justify-content: center; }
+      .price-sheet { border-radius: 8px; }
+    }
+
+    /* Toast */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; animation: fadeIn 0.3s; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    .toast.info { background: var(--ink); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="user-info" id="user-info" style="display:none">
+        <div class="user-greeting" id="user-greeting">—</div>
+        <div class="user-role" id="user-role-badge">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/dashboard#students">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Élèves
+      </a>
+      <a class="nav-link active" href="/fiche-prix">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Fiche des prix
+      </a>
+      <a class="nav-link" href="/users" id="nav-users" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/archives">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        Archives
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h2>Fiche des prix</h2>
+        <div class="view-header-sub">Grille tarifaire officielle — source unique pour les tarifs de l'école</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="exportPdf()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Exporter en PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div id="loading" style="max-width:700px;margin:0 auto">
+      <div class="skeleton" style="height:36px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:24px;width:60%;margin:0 auto 12px"></div>
+      <div class="skeleton" style="height:200px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:120px;margin-bottom:12px"></div>
+      <div class="skeleton" style="height:80px"></div>
+    </div>
+
+    <!-- Price sheet (hidden until data loads) -->
+    <div id="price-sheet" class="price-sheet" style="display:none"></div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+  const TOKEN_KEY = 'akademie_token';
+  let currentUser = null;
+
+  function getToken() { return localStorage.getItem(TOKEN_KEY); }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('visible');
+  }
+
+  async function api(path, opts = {}) {
+    const token = getToken();
+    const res = await fetch(path, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, ...(opts.headers || {}) }
+    });
+    if (res.status === 401) { window.location.href = '/login'; throw new Error('Non authentifié'); }
+    if (res.status === 403) throw new Error('Accès non autorisé');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Erreur ${res.status}`);
+    }
+    return res.json();
+  }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function formatEuros(cents) {
+    if (cents == null) return '—';
+    return (cents / 100).toFixed(0) + '€';
+  }
+
+  function formatEurosAnnual(cents) {
+    if (cents == null) return null;
+    return (cents / 100).toFixed(0) + '€';
+  }
+
+  function priceLine(label, formula) {
+    const price = formula ? formatEuros(formula.prix_cents) : '—';
+    const annual = formula && formula.montant_annuel_cents ? formatEurosAnnual(formula.montant_annuel_cents) : null;
+    let html = `<div class="ps-line">
+      <span class="ps-line-label">${esc(label)}</span>
+      <span class="ps-line-dots"></span>
+      <span class="ps-line-price">${esc(price)}</span>
+    </div>`;
+    if (annual) {
+      html += `<div class="ps-line-annual">soit ${esc(annual)}/an (adhésion ${formatEuros(2500)} + ${esc(price)} × 10 mois)</div>`;
+    }
+    return html;
+  }
+
+  function exportPdf() {
+    const token = getToken();
+    window.open('/api/fiche-prix/pdf?token=' + encodeURIComponent(token), '_blank');
+  }
+
+  async function loadPriceSheet() {
+    try {
+      const data = await api('/api/fiche-prix');
+      const el = document.getElementById('price-sheet');
+
+      const { saison, inscription, cours_collectifs_1x, cours_collectifs_2x, illimites, cours_unite } = data;
+      const cc1 = cours_collectifs_1x;
+      const cc2 = cours_collectifs_2x;
+      const ill = illimites;
+
+      // Inscription text
+      const inscPrix = inscription ? formatEuros(inscription.prix_cents) : '25€';
+
+      // Build the discipline list for Collectif standard (faithful to official sheet)
+      const disciplineList = 'Elémentaire / Moyen / Moyen-supérieur / Supérieur avancé / Préparation Battle / Ragga / Break / Hip-Hop / Pilates / stretching / yoga stretching / full body / cardio CAF / barre à terre / jazz latino / fit boxing / circuit cardio training / mobilité et renforcement musculaire';
+      const collPrix = cc1.collectif ? formatEuros(cc1.collectif.prix_cents) : '30€';
+      const collAnnual = cc1.collectif && cc1.collectif.montant_annuel_cents ? formatEurosAnnual(cc1.collectif.montant_annuel_cents) : null;
+
+      let html = '';
+
+      // Banner
+      html += `<div class="ps-banner">TARIFS SAISON ${esc(saison)}</div>`;
+
+      // Inscription
+      html += `<div class="ps-inscription">Inscription : ${esc(inscPrix)} par personne</div>`;
+
+      // COURS COLLECTIFS
+      html += `<div class="ps-section-banner">COURS COLLECTIFS*</div>`;
+
+      // 1 cours/semaine
+      html += `<div class="ps-sub-banner">Tarif mensuel/personne à partir de 1 cours par semaine :</div>`;
+      html += priceLine('Eveil et Initiation', cc1.eveil);
+      html += priceLine('Préparatoire', cc1.preparatoire);
+
+      // Discipline list block with price
+      html += `<div class="ps-disciplines">
+        ${esc(disciplineList)} :
+        <span class="price-tag">${esc(collPrix)}</span>`;
+      if (collAnnual) {
+        html += `<span class="annual-tag">soit ${esc(collAnnual)}/an (adhésion ${esc(inscPrix)} + ${esc(collPrix)} × 10 mois)</span>`;
+      }
+      html += `</div>`;
+
+      // 2 cours/semaine (only if formulas exist)
+      if (cc2.eveil || cc2.preparatoire || cc2.collectif) {
+        html += `<div class="ps-sub-banner">Tarif mensuel/personne à partir de 2 cours par semaine :</div>`;
+        if (cc2.eveil) html += priceLine('Eveil et Initiation (2 cours/sem)', cc2.eveil);
+        if (cc2.preparatoire) html += priceLine('Préparatoire (2 cours/sem)', cc2.preparatoire);
+        if (cc2.collectif) {
+          const cc2Prix = formatEuros(cc2.collectif.prix_cents);
+          const cc2Annual = cc2.collectif.montant_annuel_cents ? formatEurosAnnual(cc2.collectif.montant_annuel_cents) : null;
+          html += `<div class="ps-line">
+            <span class="ps-line-label">Collectif standard (2 cours/sem)</span>
+            <span class="ps-line-dots"></span>
+            <span class="ps-line-price">${esc(cc2Prix)}</span>
+          </div>`;
+          if (cc2Annual) {
+            html += `<div class="ps-line-annual">soit ${esc(cc2Annual)}/an (adhésion ${esc(inscPrix)} + ${esc(cc2Prix)} × 10 mois)</div>`;
+          }
+        }
+      }
+
+      html += `<div class="ps-divider"></div>`;
+
+      // ILLIMITÉS
+      html += `<div class="ps-section-banner">Tarif mensuel cours illimités :</div>`;
+      html += `<div class="ps-note-center">A partir de 3 cours par semaine</div>`;
+      html += priceLine('Forfait personne seule', ill.solo);
+      html += priceLine('Forfait famille (3 personnes max.)', ill.famille);
+      if (ill.beneficiaire) {
+        const benPrix = formatEuros(ill.beneficiaire.prix_cents);
+        html += `<div class="ps-line">
+          <span class="ps-line-label">Bénéficiaire famille (adhésion seule)</span>
+          <span class="ps-line-dots"></span>
+          <span class="ps-line-price">${esc(benPrix)}</span>
+        </div>`;
+      }
+
+      html += `<div class="ps-divider"></div>`;
+
+      // COURS À L'UNITÉ
+      html += `<div class="ps-section-banner">Cours à l\u2019unité :</div>`;
+      const unitePrix = cours_unite ? formatEuros(cours_unite.prix_cents) : '15€';
+      html += `<div class="ps-unite-price">${esc(unitePrix)}</div>`;
+      html += `<div class="ps-footnote">*pour les cours particuliers, s\u2019adresser directement au professeur souhaité</div>`;
+
+      // Footer
+      html += `<div class="ps-footer">
+        <strong>THERPSIKHOROS SAS</strong><br>
+        833 749 344 R.C.S. Bordeaux<br>
+        24 rue Paul Pouget — 33470 Gujan-Mestras<br>
+        <div class="logo-wrap">
+          <span>Tel : 05 56 54 45 51</span>
+          <span>Email : lacadmie@gmail.com</span>
+        </div>
+        www.lacademie.eu
+      </div>`;
+
+      el.innerHTML = html;
+      el.style.display = '';
+      document.getElementById('loading').style.display = 'none';
+    } catch (err) {
+      console.error('Failed to load price sheet:', err);
+      toast('Erreur de chargement des tarifs', 'error');
+      document.getElementById('loading').style.display = 'none';
+    }
+  }
+
+  async function doLogout() {
+    try { await api('/auth/logout', { method: 'POST' }); } catch (_) {}
+    localStorage.removeItem(TOKEN_KEY);
+    window.location.href = '/login';
+  }
+
+  async function init() {
+    const token = getToken();
+    if (!token) { window.location.href = '/login'; return; }
+    try {
+      const data = await api('/auth/me');
+      currentUser = data.user;
+      document.getElementById('user-info').style.display = '';
+      document.getElementById('user-greeting').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+      document.getElementById('user-role-badge').textContent = currentUser.role;
+      if (currentUser.role === 'PRÉSIDENT') {
+        document.getElementById('nav-users').style.display = '';
+      }
+    } catch (_) { window.location.href = '/login'; return; }
+    await loadPriceSheet();
+  }
+
+  init();
+</script>
+</body>
+</html>

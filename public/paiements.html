@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Saisie paiements</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999;
+      --success: #2d8a4e; --danger: #dc3545;
+      --sidebar-width: 230px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-brand .user-info { margin-top: 12px; padding: 10px 14px; background: rgba(255,255,255,0.06); border-radius: 8px; }
+    .sidebar-brand .user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-brand .user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--rose-light); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer;
+      padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+    }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* ── Hamburger / mobile ── */
+    .hamburger {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+      background: var(--ink); border: none; border-radius: 8px;
+      width: 40px; height: 40px; cursor: pointer;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 5px;
+    }
+    .hamburger span { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99; }
+    .sidebar-overlay.visible { display: block; }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; min-height: 100vh; }
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+    }
+    .page-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .page-header p { color: var(--slate); font-size: 14px; margin-top: 4px; }
+
+    /* ── Summary tiles ── */
+    .tiles {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 32px;
+    }
+    .tile {
+      background: #fff; border-radius: 14px; padding: 22px 24px;
+      box-shadow: 0 1px 4px rgba(10,10,10,0.05); border: 1px solid rgba(0,0,0,0.04);
+    }
+    .tile-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 6px; }
+    .tile-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; color: var(--ink); }
+    .tile-value.green { color: var(--success); }
+    .tile-value.red { color: var(--danger); }
+    .tile-value.gold { color: #a07830; }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
+    }
+    .input, .select {
+      padding: 10px 14px; border: 1px solid #d4d0cb; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      background: #fff; transition: border-color 0.2s; color: var(--ink);
+    }
+    .input:focus, .select:focus { outline: none; border-color: var(--rose); }
+    .search-input { flex: 1; min-width: 200px; }
+
+    /* ── Table ── */
+    .card { background: #fff; border-radius: 14px; padding: 0; box-shadow: 0 1px 4px rgba(10,10,10,0.05); border: 1px solid rgba(0,0,0,0.04); overflow: hidden; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--cream); }
+    th {
+      padding: 13px 16px; text-align: left; font-weight: 600; font-size: 12px;
+      color: var(--slate); border-bottom: 2px solid #ece8e3;
+      text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+      cursor: pointer; user-select: none;
+    }
+    th:hover { color: var(--rose); }
+    th.sorted-asc::after { content: ' ↑'; color: var(--rose); }
+    th.sorted-desc::after { content: ' ↓'; color: var(--rose); }
+    td { padding: 12px 16px; border-bottom: 1px solid #f2efec; font-size: 14px; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(250,248,245,0.6); }
+
+    /* ── Formule badge ── */
+    .formule-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
+      background: rgba(201,169,110,0.15); color: #96792e;
+      border: 1px solid rgba(201,169,110,0.3);
+    }
+    .formule-badge.none { background: rgba(0,0,0,0.05); color: var(--muted); border-color: rgba(0,0,0,0.08); }
+
+    /* ── Montant du/payé/restant ── */
+    .amount { font-variant-numeric: tabular-nums; }
+    .amount-green { color: var(--success); font-weight: 600; }
+    .amount-red { color: var(--danger); font-weight: 600; }
+
+    /* ── Inline payment input ── */
+    .pay-wrap { display: flex; align-items: center; gap: 6px; }
+    .pay-input {
+      width: 90px; padding: 7px 10px; border: 1px solid #d4d0cb; border-radius: 7px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+      background: #fff; transition: border-color 0.2s, box-shadow 0.2s;
+      text-align: right; font-variant-numeric: tabular-nums;
+    }
+    .pay-input:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(196,77,86,0.1); }
+    .pay-input.saving { border-color: var(--gold); background: rgba(201,169,110,0.05); }
+    .pay-input.saved { border-color: var(--success); background: rgba(45,138,78,0.05); }
+    .pay-input.error { border-color: var(--danger); }
+    .pay-suffix { font-size: 13px; color: var(--muted); }
+
+    /* ── Spinner / status dot ── */
+    .save-indicator { font-size: 12px; transition: opacity 0.3s; min-width: 20px; }
+    .save-indicator.hidden { opacity: 0; }
+    .save-indicator.ok { color: var(--success); }
+    .save-indicator.err { color: var(--danger); }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 60px 24px; color: var(--muted); }
+    .empty-state svg { opacity: 0.25; margin-bottom: 14px; }
+    .empty-state p { font-size: 15px; }
+
+    /* ── Loading ── */
+    .loading { text-align: center; padding: 60px; color: var(--muted); font-size: 15px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .hamburger { display: flex; }
+      .main { margin-left: 0; padding: 24px 16px; padding-top: 68px; }
+      .tiles { grid-template-columns: repeat(2, 1fr); }
+      .page-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<button class="hamburger" onclick="toggleMobileSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>L'Académie<span>.</span></h1>
+      <div class="user-info" id="user-info" style="display:none">
+        <div class="user-greeting" id="user-greeting"></div>
+        <div class="user-role" id="user-role-badge"></div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/dashboard#students">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Élèves
+      </a>
+      <a class="nav-link active" href="/paiements">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Paiements
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/archives" id="nav-archives" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+        Archives
+      </a>
+      <a class="nav-link" href="/sante-base" id="nav-sante" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Santé de la base
+      </a>
+      <a class="nav-link" href="/users" id="nav-users" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Utilisateurs
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <h2>Saisie des paiements</h2>
+        <p>Cliquez sur le montant payé pour le modifier. Sauvegarde automatique à la validation.</p>
+      </div>
+    </div>
+
+    <!-- Summary tiles -->
+    <div class="tiles">
+      <div class="tile">
+        <div class="tile-label">Élèves</div>
+        <div class="tile-value" id="tile-count">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Total dû</div>
+        <div class="tile-value gold" id="tile-total-du">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Total payé</div>
+        <div class="tile-value green" id="tile-total-paye">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Restant dû</div>
+        <div class="tile-value red" id="tile-restant">—</div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <input type="text" class="input search-input" id="search" placeholder="Rechercher par nom, prenom…" oninput="filterTable()" autocomplete="off">
+      <select class="select" id="filter-restant" onchange="filterTable()">
+        <option value="">Tous</option>
+        <option value="restant">Avec restant dû</option>
+        <option value="solde">Soldés</option>
+        <option value="zero">Sans formule / 0€</option>
+      </select>
+      <select class="select" id="sort-by" onchange="applySort()">
+        <option value="name">Trier : Nom</option>
+        <option value="formule">Trier : Formule</option>
+        <option value="du">Trier : Montant dû</option>
+        <option value="restant">Trier : Restant dû ↓</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <div class="loading" id="loading">Chargement…</div>
+        <table id="payment-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Prénom</th>
+              <th>Formule</th>
+              <th>Montant dû</th>
+              <th>Montant payé</th>
+              <th>Dernier paiement</th>
+              <th>Restant dû</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty-state" style="display:none">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          <p>Aucun élève trouvé</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Quick-add payment modal ───────────────────────────────────────────── -->
+<div id="pay-modal-overlay" onclick="if(event.target===this)closePayModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:360px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#0a0a0a;" id="pay-modal-title">Ajouter un paiement</h3>
+      <button onclick="closePayModal()" style="background:none;border:none;cursor:pointer;color:#999;font-size:20px;">×</button>
+    </div>
+    <div id="pay-modal-student-name" style="font-weight:600;color:#444;font-size:14px;margin-bottom:16px;padding:8px 12px;background:#faf8f5;border-radius:8px;border:1px solid #e5e3de;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px;">Date</label>
+        <input type="date" id="pay-modal-date" style="width:100%;padding:9px 12px;border:1.5px solid #d4d0cb;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px;">Montant (€)</label>
+        <input type="number" id="pay-modal-amount" min="1" step="1" placeholder="ex: 300" style="width:100%;padding:9px 12px;border:1.5px solid #d4d0cb;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;">
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px;">Méthode</label>
+      <select id="pay-modal-method" style="width:100%;padding:9px 12px;border:1.5px solid #d4d0cb;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;background:#fff;">
+        <option value="espèces">Espèces</option>
+        <option value="chèque">Chèque</option>
+        <option value="virement">Virement</option>
+        <option value="CB">CB</option>
+        <option value="prélèvement">Prélèvement</option>
+      </select>
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="font-size:11px;font-weight:600;color:#666;display:block;margin-bottom:5px;">Notes (optionnel)</label>
+      <input type="text" id="pay-modal-notes" placeholder="Référence, commentaire…" style="width:100%;padding:9px 12px;border:1.5px solid #d4d0cb;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;">
+    </div>
+    <div id="pay-modal-error" style="display:none;color:#dc3545;font-size:13px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="submitQuickPayment()" id="pay-modal-submit" style="flex:1;padding:11px;background:#c44d56;color:#fff;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Enregistrer</button>
+      <button onclick="closePayModal()" style="padding:11px 18px;background:#f0ede8;color:#555;border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Auth ─────────────────────────────────────────────────────────────────────
+const token = localStorage.getItem('akademie_token');
+if (!token) { window.location.href = '/login'; }
+
+let currentUser = null;
+let allStudents = [];  // raw data from API
+let sortKey = 'name';
+let sortDir = 1;  // 1 = asc, -1 = desc
+
+function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  };
+  if (body !== undefined) opts.body = JSON.stringify(body);
+  return fetch(path, opts);
+}
+
+function doLogout() {
+  api('POST', '/auth/logout').finally(() => {
+    localStorage.removeItem('akademie_token');
+    window.location.href = '/login';
+  });
+}
+
+function toggleMobileSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+function fmt(cents) {
+  if (cents === null || cents === undefined) return '—';
+  return (cents / 100).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await api('GET', '/auth/me');
+    if (!res.ok) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    currentUser = data.user;
+
+    if (!currentUser || !['PRÉSIDENT', 'DIRECTRICE'].includes(currentUser.role)) {
+      window.location.href = '/dashboard';
+      return;
+    }
+
+    document.getElementById('user-info').style.display = '';
+    document.getElementById('user-greeting').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
+    document.getElementById('user-role-badge').textContent = currentUser.role;
+
+    if (['PRÉSIDENT', 'DIRECTRICE'].includes(currentUser.role)) {
+      document.getElementById('nav-archives').style.display = '';
+      document.getElementById('nav-sante').style.display = '';
+    }
+    if (currentUser.role === 'PRÉSIDENT') {
+      document.getElementById('nav-users').style.display = '';
+    }
+
+    await loadStudents();
+  } catch (e) {
+    console.error('[paiements] init error:', e);
+    window.location.href = '/login';
+  }
+}
+
+// ── Load data ─────────────────────────────────────────────────────────────────
+async function loadStudents() {
+  document.getElementById('loading').style.display = '';
+  document.getElementById('payment-table').style.display = 'none';
+  document.getElementById('empty-state').style.display = 'none';
+
+  try {
+    const res = await api('GET', '/api/payments/batch');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    allStudents = await res.json();
+    renderTable();
+  } catch (e) {
+    console.error('[paiements] loadStudents error:', e);
+    document.getElementById('loading').textContent = 'Erreur de chargement. Rechargez la page.';
+  }
+}
+
+// ── Compute derived values ─────────────────────────────────────────────────────
+function getDu(s) {
+  // montant_du_cents comes pre-computed from the backend
+  return s.montant_du_cents !== null && s.montant_du_cents !== undefined
+    ? Number(s.montant_du_cents)
+    : null;
+}
+
+function getPaid(s) {
+  return Number(s.amount_paid_cents || 0);
+}
+
+function getRestant(s) {
+  const du = getDu(s);
+  if (du === null) return null;
+  return du - getPaid(s);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function getFilteredSorted() {
+  const search = document.getElementById('search').value.toLowerCase().trim();
+  const filterRestant = document.getElementById('filter-restant').value;
+
+  let rows = allStudents.filter(s => {
+    // Text search
+    if (search) {
+      const name = `${s.last_name} ${s.first_name}`.toLowerCase();
+      if (!name.includes(search)) return false;
+    }
+    // Restant filter
+    if (filterRestant === 'restant') {
+      const r = getRestant(s);
+      if (r === null || r <= 0) return false;
+    } else if (filterRestant === 'solde') {
+      const r = getRestant(s);
+      if (r === null || r > 0) return false;
+    } else if (filterRestant === 'zero') {
+      if (getDu(s) !== null && getDu(s) > 0) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  rows.sort((a, b) => {
+    let av, bv;
+    if (sortKey === 'name') {
+      av = `${a.last_name} ${a.first_name}`.toLowerCase();
+      bv = `${b.last_name} ${b.first_name}`.toLowerCase();
+    } else if (sortKey === 'formule') {
+      av = (a.formule_label || '').toLowerCase();
+      bv = (b.formule_label || '').toLowerCase();
+    } else if (sortKey === 'du') {
+      av = getDu(a) ?? -1;
+      bv = getDu(b) ?? -1;
+    } else if (sortKey === 'restant') {
+      av = getRestant(a) ?? -Infinity;
+      bv = getRestant(b) ?? -Infinity;
+    }
+    if (av < bv) return -sortDir;
+    if (av > bv) return sortDir;
+    return 0;
+  });
+
+  return rows;
+}
+
+function renderTable() {
+  document.getElementById('loading').style.display = 'none';
+
+  const rows = getFilteredSorted();
+  const tbody = document.getElementById('table-body');
+
+  if (rows.length === 0) {
+    document.getElementById('payment-table').style.display = 'none';
+    document.getElementById('empty-state').style.display = '';
+    updateTiles([]);
+    return;
+  }
+
+  document.getElementById('payment-table').style.display = '';
+  document.getElementById('empty-state').style.display = 'none';
+
+  tbody.innerHTML = rows.map(s => {
+    const du = getDu(s);
+    const paid = getPaid(s);
+    const restant = du !== null ? (du - paid) : null;
+
+    const duDisplay = du !== null ? fmt(du) : '<span style="color:var(--muted)">—</span>';
+    const restantDisplay = restant === null
+      ? '<span style="color:var(--muted)">—</span>'
+      : restant <= 0
+        ? `<span class="amount-green">${fmt(0)}&nbsp;✓</span>`
+        : `<span class="amount-red">${fmt(restant)}</span>`;
+
+    const formuleHtml = s.formule_label
+      ? `<span class="formule-badge">${escHtml(s.formule_label)}</span>`
+      : `<span class="formule-badge none">—</span>`;
+
+    // Last payment info
+    const lp = s.last_payment;
+    const lastPayDisplay = lp
+      ? `<span style="font-size:13px;">${fmtDate(lp.payment_date)}</span><br><span style="font-size:11px;color:var(--muted);">${fmtMethod(lp.payment_method)} · ${fmt(lp.amount_cents)}</span>`
+      : '<span style="color:var(--muted)">—</span>';
+
+    const addBtn = `<button onclick="openQuickPay(${s.id}, '${escHtml(s.first_name)} ${escHtml(s.last_name)}')" title="Ajouter un paiement"
+      style="width:28px;height:28px;border-radius:6px;background:var(--rose);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>`;
+
+    return `<tr data-id="${s.id}">
+      <td><strong>${escHtml(s.last_name)}</strong></td>
+      <td>${escHtml(s.first_name)}</td>
+      <td>${formuleHtml}</td>
+      <td class="amount">${duDisplay}</td>
+      <td class="amount"><strong>${fmt(paid)}</strong></td>
+      <td>${lastPayDisplay}</td>
+      <td>${restantDisplay}</td>
+      <td>${addBtn}</td>
+    </tr>`;
+  }).join('');
+
+  updateTiles(rows);
+}
+
+function filterTable() { renderTable(); }
+
+function applySort() {
+  sortKey = document.getElementById('sort-by').value;
+  // Restant defaults descending (most owed first), others ascending
+  sortDir = (sortKey === 'restant') ? -1 : 1;
+  renderTable();
+}
+
+function updateTiles(rows) {
+  const count = allStudents.length;
+  let totalDu = 0, totalPaid = 0;
+  allStudents.forEach(s => {
+    const du = getDu(s);
+    if (du !== null) totalDu += du;
+    totalPaid += getPaid(s);
+  });
+  const restant = totalDu - totalPaid;
+
+  document.getElementById('tile-count').textContent = count;
+  document.getElementById('tile-total-du').textContent = fmt(totalDu);
+  document.getElementById('tile-total-paye').textContent = fmt(totalPaid);
+  document.getElementById('tile-restant').textContent = fmt(Math.max(0, restant));
+}
+
+// ── Date / method helpers ──────────────────────────────────────────────────────
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function fmtMethod(m) {
+  const map = { 'espèces': 'Espèces', 'chèque': 'Chèque', 'virement': 'Virement', 'CB': 'CB', 'prélèvement': 'Prélèvement' };
+  return map[m] || m || '—';
+}
+
+// ── Quick-add payment modal ────────────────────────────────────────────────────
+let _quickPayStudentId = null;
+
+function openQuickPay(studentId, studentName) {
+  _quickPayStudentId = studentId;
+  document.getElementById('pay-modal-student-name').textContent = studentName;
+  document.getElementById('pay-modal-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('pay-modal-amount').value = '';
+  document.getElementById('pay-modal-method').value = 'espèces';
+  document.getElementById('pay-modal-notes').value = '';
+  document.getElementById('pay-modal-error').style.display = 'none';
+  document.getElementById('pay-modal-submit').disabled = false;
+  document.getElementById('pay-modal-submit').textContent = 'Enregistrer';
+  const overlay = document.getElementById('pay-modal-overlay');
+  overlay.style.display = 'flex';
+  document.getElementById('pay-modal-amount').focus();
+}
+
+function closePayModal() {
+  document.getElementById('pay-modal-overlay').style.display = 'none';
+  _quickPayStudentId = null;
+}
+
+async function submitQuickPayment() {
+  if (!_quickPayStudentId) return;
+
+  const dateVal = document.getElementById('pay-modal-date').value;
+  const amountVal = document.getElementById('pay-modal-amount').value;
+  const method = document.getElementById('pay-modal-method').value;
+  const notes = document.getElementById('pay-modal-notes').value.trim();
+  const errEl = document.getElementById('pay-modal-error');
+
+  if (!dateVal) { errEl.textContent = 'Date requise.'; errEl.style.display = ''; return; }
+  const amountCents = Math.round(parseFloat(amountVal) * 100);
+  if (!amountVal || isNaN(amountCents) || amountCents <= 0) {
+    errEl.textContent = 'Montant invalide (doit être > 0).'; errEl.style.display = ''; return;
+  }
+
+  const submitBtn = document.getElementById('pay-modal-submit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '…';
+  errEl.style.display = 'none';
+
+  try {
+    const res = await api('POST', `/api/payments/students/${_quickPayStudentId}/entries`, {
+      amount_cents: amountCents,
+      payment_date: dateVal,
+      payment_method: method,
+      notes,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Erreur serveur');
+    }
+
+    closePayModal();
+    // Reload the batch to reflect updated totals and last_payment
+    await loadStudents();
+  } catch (e) {
+    console.error('[paiements] quick-pay error:', e);
+    errEl.textContent = e.message;
+    errEl.style.display = '';
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Enregistrer';
+  }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+init();
+</script>
+</body>
+</html>

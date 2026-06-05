@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Santé de la base</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a; --cream: #faf8f5; --rose: #c44d56; --rose-light: #e8949a;
+      --gold: #c9a96e; --slate: #555; --muted: #999; --sidebar-width: 230px;
+      --success: #2d8a4e; --danger: #dc3545; --warning: #e6930a;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); -webkit-font-smoothing: antialiased; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      width: var(--sidebar-width); background: var(--ink);
+      position: fixed; top: 0; left: 0; bottom: 0;
+      display: flex; flex-direction: column; z-index: 100;
+      transition: transform 0.3s ease;
+    }
+    .sidebar-brand { padding: 28px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-brand h1 { font-size: 18px; font-weight: 800; color: var(--cream); letter-spacing: -0.02em; }
+    .sidebar-brand span { color: var(--rose-light); }
+    .sidebar-user {
+      margin-top: 12px; padding: 10px 14px;
+      background: rgba(255,255,255,0.06); border-radius: 8px; display: none;
+    }
+    .sidebar-user-greeting { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-user-role { font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; color: var(--gold); }
+    .sidebar-nav { flex: 1; padding: 16px 0; }
+    .nav-link {
+      display: flex; align-items: center; gap: 12px; padding: 13px 24px;
+      color: rgba(255,255,255,0.55); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; font-size: 14px; font-weight: 500; transition: all 0.2s;
+    }
+    .nav-link:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.04); }
+    .nav-link.active { color: var(--cream); background: rgba(255,255,255,0.08); border-left-color: var(--rose); }
+    .nav-link svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer { padding: 20px 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn { background: none; border: none; color: rgba(255,255,255,0.35); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 8px; transition: color 0.2s; }
+    .logout-btn:hover { color: var(--rose-light); }
+
+    /* === HAMBURGER === */
+    .hamburger {
+      display: none; position: fixed; top: 16px; left: 16px; z-index: 200;
+      background: var(--ink); border: none; width: 42px; height: 42px;
+      border-radius: 10px; cursor: pointer; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .hamburger span { width: 18px; height: 2px; background: var(--cream); }
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 99;
+    }
+    .sidebar-overlay.visible { display: block; }
+
+    /* === MAIN === */
+    .main { margin-left: var(--sidebar-width); flex: 1; padding: 40px 48px; max-width: 1200px; }
+
+    .view-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 32px; flex-wrap: wrap; gap: 16px;
+    }
+    .view-header h2 { font-size: 28px; letter-spacing: -0.02em; }
+    .view-header-meta { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    .select {
+      padding: 10px 14px; border: 1px solid #d4d0cb; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 14px;
+      background: #fff; transition: border-color 0.2s; cursor: pointer;
+    }
+    .select:focus { outline: none; border-color: var(--rose); }
+
+    /* === CARDS === */
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px;
+      box-shadow: 0 1px 4px rgba(10,10,10,0.05);
+      border: 1px solid rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px; color: var(--ink);
+    }
+    .card-title .badge-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .badge-icon.blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-icon.green { background: #dcfce7; color: #166534; }
+    .badge-icon.purple { background: #f3e8ff; color: #7e22ce; }
+    .badge-icon.orange { background: #ffedd5; color: #c2410c; }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); margin-bottom: 20px; padding-bottom: 8px;
+      border-bottom: 1px solid #ece8e3;
+    }
+
+    /* === SCORE GLOBAL === */
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+    .score-tile {
+      text-align: center; padding: 24px 16px; border-radius: 12px;
+      border: 1.5px solid transparent;
+    }
+    .score-tile.green { background: #f0fdf4; border-color: #bbf7d0; }
+    .score-tile.red { background: #fff1f2; border-color: #fecdd3; }
+    .score-tile.blue { background: #eff6ff; border-color: #bfdbfe; }
+    .score-num { font-family: 'Syne', sans-serif; font-size: 40px; font-weight: 800; line-height: 1; }
+    .score-num.green { color: var(--success); }
+    .score-num.red { color: var(--danger); }
+    .score-num.blue { color: #1d4ed8; }
+    .score-sub { font-size: 13px; color: var(--slate); margin-top: 8px; font-weight: 500; }
+
+    /* === BAR CHARTS === */
+    .bar-list { display: flex; flex-direction: column; gap: 12px; }
+    .bar-item { }
+    .bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .bar-label { font-size: 14px; font-weight: 500; color: var(--ink); }
+    .bar-meta { font-size: 13px; color: var(--muted); }
+    .bar-track { background: #f2efec; border-radius: 100px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 100px; transition: width 0.6s ease; }
+    .bar-fill.rose { background: var(--rose); }
+    .bar-fill.gold { background: var(--gold); }
+    .bar-fill.blue { background: #3b82f6; }
+    .bar-fill.green { background: var(--success); }
+    .bar-fill.danger { background: var(--danger); }
+    .bar-fill.warning { background: var(--warning); }
+    .bar-fill.purple { background: #8b5cf6; }
+
+    /* === COMPLETUDE TABLE === */
+    .completude-list { display: flex; flex-direction: column; gap: 8px; }
+    .completude-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px; border-radius: 10px; background: var(--cream);
+      border: 1px solid #ece8e3;
+    }
+    .completude-row:first-child { border-color: #fecaca; background: #fff5f5; }
+    .completude-field { flex: 1; font-size: 14px; font-weight: 600; }
+    .completude-counts { font-size: 13px; color: var(--slate); white-space: nowrap; }
+    .completude-pct {
+      font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+      width: 48px; text-align: right;
+    }
+    .pct-ok { color: var(--success); }
+    .pct-warn { color: var(--warning); }
+    .pct-bad { color: var(--danger); }
+    .completude-bar-wrap { width: 120px; }
+    .completude-tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px; white-space: nowrap;
+    }
+    .tag-manquant { background: #fee2e2; color: #991b1b; }
+    .tag-warn { background: #fef9c3; color: #854d0e; }
+    .tag-ok { background: #dcfce7; color: #166534; }
+
+    /* === SITE GRID === */
+    .site-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+    .site-tile {
+      padding: 18px 16px; border-radius: 12px; text-align: center;
+      border: 1.5px solid #ece8e3; background: var(--cream);
+    }
+    .site-num { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: var(--ink); }
+    .site-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 500; }
+    .site-pct { font-size: 12px; color: var(--rose); font-weight: 600; margin-top: 2px; }
+
+    /* === AGE GRID === */
+    .age-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .age-tile {
+      padding: 16px; border-radius: 12px; background: var(--cream);
+      border: 1.5px solid #ece8e3;
+    }
+    .age-range { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; }
+    .age-count { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--ink); }
+    .age-pct { font-size: 13px; color: var(--rose); font-weight: 600; margin-top: 2px; }
+
+    /* === INLINE DISCIPLINE COMPARISON (n-1 / n-2) === */
+    .disc-comparison-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 5px 10px 5px 24px; /* indent to visually nest */
+      margin-top: -4px; /* overlap slightly with bar above */
+      opacity: 0.65;
+    }
+    .disc-comp-label {
+      font-size: 12px; color: var(--slate); width: 80px; flex-shrink: 0;
+      font-weight: 500; white-space: nowrap;
+    }
+    .disc-comp-tree {
+      font-size: 12px; color: var(--muted); flex-shrink: 0; margin-right: -4px;
+    }
+    .disc-comp-track { flex: 1; background: #f2efec; border-radius: 100px; height: 5px; overflow: hidden; }
+    .disc-comp-fill { height: 100%; border-radius: 100px; }
+    .disc-comp-fill.n1 { background: var(--gold); }
+    .disc-comp-fill.n2 { background: #94a3b8; }
+    .disc-comp-meta { font-size: 11px; color: var(--muted); white-space: nowrap; min-width: 110px; text-align: right; }
+
+    /* === COMPARATIF INTER-SAISONS === */
+    .comparatif-section { margin-top: 8px; }
+    .comparatif-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+    }
+    .comparatif-header-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .mode-toggle {
+      display: flex; background: #f2efec; border-radius: 8px; padding: 3px; gap: 2px;
+    }
+    .mode-btn {
+      padding: 7px 16px; border: none; background: transparent; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+      cursor: pointer; color: var(--muted); transition: all 0.2s;
+    }
+    .mode-btn.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .saison-selector {
+      padding: 7px 12px; border: 1px solid #d4d0cb; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; background: #fff; cursor: pointer;
+    }
+    .comparatif-legend {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .legend-chip {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--slate);
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-dot.s0 { background: #94a3b8; } /* n-2 */
+    .legend-dot.s1 { background: var(--gold); } /* n-1 */
+    .legend-dot.s2 { background: var(--rose); } /* n */
+
+    /* KPI table */
+    .comparatif-kpi-row {
+      display: flex; align-items: stretch; gap: 0;
+      border: 1px solid #ece8e3; border-radius: 10px; overflow: hidden;
+      margin-bottom: 8px; background: #fff;
+    }
+    .period-label-cell {
+      width: 110px; flex-shrink: 0; padding: 10px 14px;
+      background: var(--cream); border-right: 1px solid #ece8e3;
+      display: flex; align-items: center;
+      font-size: 12px; font-weight: 700; color: var(--ink);
+    }
+    .season-cells { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .season-cell {
+      padding: 10px 14px; border-right: 1px solid #f2efec; display: flex; flex-direction: column; gap: 4px;
+    }
+    .season-cell:last-child { border-right: none; }
+    .season-cell.empty { opacity: 0.35; }
+    .kpi-mini-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .kpi-trio { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+    .kpi-val { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800; color: var(--ink); }
+    .kpi-val.s0 { color: #94a3b8; }
+    .kpi-val.s1 { color: var(--gold); }
+    .kpi-val.s2 { color: var(--rose); }
+    .kpi-sub { font-size: 11px; color: var(--muted); }
+
+    /* Mini sparkline track */
+    .comparatif-chart { margin-top: 20px; }
+    .chart-scroll { overflow-x: auto; padding-bottom: 4px; }
+    .chart-table {
+      border-collapse: collapse; width: 100%; min-width: 600px;
+      font-size: 12px;
+    }
+    .chart-table th {
+      padding: 6px 10px; text-align: left; font-weight: 700; color: var(--muted);
+      background: var(--cream); border-bottom: 1px solid #ece8e3; white-space: nowrap;
+    }
+    .chart-table th.saison-col { text-align: center; }
+    .chart-table td {
+      padding: 7px 10px; border-bottom: 1px solid #f5f3f0; vertical-align: middle;
+    }
+    .chart-table tr:last-child td { border-bottom: none; }
+    .chart-table td.period-col { font-weight: 600; color: var(--ink); white-space: nowrap; }
+    .kpi-cell { text-align: center; }
+    .kpi-cell .num { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+    .kpi-cell .num.s0 { color: #94a3b8; }
+    .kpi-cell .num.s1 { color: var(--gold); }
+    .kpi-cell .num.s2 { color: var(--rose); }
+    .kpi-cell .sub { font-size: 10px; color: var(--muted); display: block; margin-top: 1px; }
+    .kpi-cell.empty .num { color: #ccc; }
+    .bar-inline { display: inline-block; height: 4px; border-radius: 2px; min-width: 2px; }
+    .bar-inline.s0 { background: #94a3b8; }
+    .bar-inline.s1 { background: var(--gold); }
+    .bar-inline.s2 { background: var(--rose); }
+
+    /* KPI summary row */
+    .saison-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .saison-summary-tile {
+      border-radius: 12px; padding: 18px 16px; border: 2px solid transparent;
+    }
+    .saison-summary-tile.s0 { background: #f8fafc; border-color: #e2e8f0; }
+    .saison-summary-tile.s1 { background: #fffbeb; border-color: #fde68a; }
+    .saison-summary-tile.s2 { background: #fff1f2; border-color: #fecdd3; }
+    .summary-tile-nom { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .summary-tile-nom.s0 { color: #64748b; }
+    .summary-tile-nom.s1 { color: #92400e; }
+    .summary-tile-nom.s2 { color: #9f1239; }
+    .summary-kpis { display: flex; flex-direction: column; gap: 6px; }
+    .summary-kpi-line { display: flex; justify-content: space-between; align-items: baseline; }
+    .summary-kpi-key { font-size: 12px; color: var(--slate); }
+    .summary-kpi-num { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+    .summary-kpi-num.s0 { color: #94a3b8; }
+    .summary-kpi-num.s1 { color: var(--gold); }
+    .summary-kpi-num.s2 { color: var(--rose); }
+
+    @media (max-width: 768px) {
+      .saison-summary-grid { grid-template-columns: 1fr; }
+      .period-label-cell { width: 80px; font-size: 11px; }
+      .season-cells { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* === LOADING / ERROR === */
+    .loading-box { padding: 60px; text-align: center; color: var(--muted); }
+    .spinner {
+      width: 32px; height: 32px; border-radius: 50%; margin: 0 auto 16px;
+      border: 3px solid #e5e2dd; border-top-color: var(--rose);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error-box { padding: 40px; text-align: center; color: var(--danger); }
+
+    /* === NOTE === */
+    .note-box {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; color: #92400e; margin-top: 16px;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+      .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 72px 16px 24px; }
+      .score-grid { grid-template-columns: 1fr 1fr; }
+      .site-grid { grid-template-columns: 1fr 1fr; }
+      .completude-bar-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <h1>Académie<span>OS</span></h1>
+      <div class="sidebar-user" id="sidebar-user">
+        <div class="sidebar-user-greeting" id="sidebar-greeting">—</div>
+        <div class="sidebar-user-role" id="sidebar-role">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Tableau de bord
+      </a>
+      <a class="nav-link" href="/dashboard#students">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Élèves
+      </a>
+      <a class="nav-link active" href="/sante-base">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Santé de la base
+      </a>
+      <a class="nav-link" href="/messagerie">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Messagerie
+      </a>
+      <a class="nav-link" href="/profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        Mon profil
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="view-header">
+      <div>
+        <h2>Santé de la base</h2>
+        <div class="view-header-meta">Diagnostic opérationnel permanent — données en temps réel</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <select class="select" id="saison-select" onchange="loadDiag()">
+          <option value="">Chargement…</option>
+        </select>
+        <span id="last-refresh" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+    </div>
+
+    <div id="content">
+      <div class="loading-box"><div class="spinner"></div>Chargement du diagnostic…</div>
+    </div>
+
+    <!-- ========= COMPARATIF INTER-SAISONS ========= -->
+    <div class="card comparatif-section" id="comparatif-card" style="display:none;">
+      <div class="card-title">
+        <div class="badge-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        Comparatif inter-saisons
+      </div>
+
+      <div class="comparatif-header">
+        <div class="comparatif-header-left">
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="btn-hebdo" onclick="setComparatifMode('hebdo')">Hebdomadaire</button>
+            <button class="mode-btn" id="btn-mensuel" onclick="setComparatifMode('mensuel')">Mensuel</button>
+          </div>
+          <select class="saison-selector" id="comp-anchor-select" onchange="loadComparatif()">
+            <option value="">Chargement…</option>
+          </select>
+        </div>
+        <div class="comparatif-legend" id="comp-legend">
+          <!-- populated by JS -->
+        </div>
+      </div>
+
+      <!-- Totaux par saison -->
+      <div class="saison-summary-grid" id="comp-summary">
+        <div class="loading-box" style="grid-column:1/-1;padding:20px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div>
+      </div>
+
+      <!-- Tableau détaillé période par période -->
+      <div class="comparatif-chart">
+        <div class="section-label" style="margin-bottom:12px;" id="comp-table-label">Vue hebdomadaire — semaines relatives à la rentrée</div>
+        <div class="chart-scroll">
+          <table class="chart-table" id="comp-table">
+            <thead><tr><th>Période</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ======== AUTH ========
+const _authToken = localStorage.getItem('akademie_token');
+const _currentUser = JSON.parse(localStorage.getItem('akademie_user') || 'null');
+
+if (!_authToken || !_currentUser) {
+  window.location.replace('/login');
+}
+
+// Role check
+if (_currentUser && !['PRÉSIDENT', 'DIRECTRICE'].includes(_currentUser.role)) {
+  window.location.replace('/dashboard');
+}
+
+function doLogout() {
+  fetch('/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + _authToken } }).catch(() => null);
+  localStorage.removeItem('akademie_token');
+  localStorage.removeItem('akademie_user');
+  window.location.replace('/login');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+}
+
+// ======== INIT ========
+function initUserUI() {
+  if (!_currentUser) return;
+  const greetEl = document.getElementById('sidebar-greeting');
+  const roleEl = document.getElementById('sidebar-role');
+  const userBox = document.getElementById('sidebar-user');
+  if (greetEl) greetEl.textContent = `Bonjour ${_currentUser.first_name}`;
+  if (roleEl) roleEl.textContent = _currentUser.role;
+  if (userBox) userBox.style.display = '';
+}
+
+function pct(n, total) {
+  if (!total) return 0;
+  return Math.round((n / total) * 100);
+}
+
+function pctColor(p) {
+  if (p >= 90) return 'green';
+  if (p >= 70) return 'gold';
+  return 'rose';
+}
+
+function pctTextClass(p) {
+  if (p >= 90) return 'pct-ok';
+  if (p >= 70) return 'pct-warn';
+  return 'pct-bad';
+}
+
+function pctTagClass(p) {
+  if (p >= 90) return 'tag-ok';
+  if (p >= 70) return 'tag-warn';
+  return 'tag-manquant';
+}
+
+function pctTagLabel(p) {
+  if (p >= 90) return 'Complet';
+  if (p >= 70) return 'Partiel';
+  return 'Incomplet';
+}
+
+function barFillColor(label) {
+  const l = label.toLowerCase();
+  if (l.includes('illimit')) return 'blue';
+  if (l.includes('cours à l') || l.includes('unité')) return 'warning';
+  if (l.includes('collectif')) return 'purple';
+  if (l.includes('éveil') || l.includes('eveil') || l.includes('initiation')) return 'green';
+  if (l.includes('préparatoire') || l.includes('preparatoire')) return 'gold';
+  return 'rose';
+}
+
+async function loadSaisons() {
+  try {
+    const resp = await fetch('/api/saisons', {
+      headers: { 'Authorization': 'Bearer ' + _authToken }
+    });
+    const saisons = await resp.json();
+    const sel = document.getElementById('saison-select');
+    sel.innerHTML = '';
+    saisons.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.nom + (s.active ? ' (en cours)' : '');
+      if (s.active) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    return saisons;
+  } catch (e) {
+    console.error('Failed to load saisons', e);
+  }
+}
+
+async function loadDiag() {
+  const saisonId = document.getElementById('saison-select').value;
+  if (!saisonId) return;
+
+  document.getElementById('content').innerHTML = '<div class="loading-box"><div class="spinner"></div>Calcul du diagnostic…</div>';
+  _discCompData = null; // clear stale comparison data while reloading
+
+  try {
+    // Fetch diagnostic and discipline comparison in parallel
+    const [resp] = await Promise.all([
+      fetch(`/api/diagnostic/sante-base?saison_id=${saisonId}`, {
+        headers: { 'Authorization': 'Bearer ' + _authToken }
+      }),
+      loadDiscComp()
+    ]);
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || resp.statusText);
+    }
+    const data = await resp.json();
+    renderDiag(data);
+    injectDiscCompRows();
+
+    const now = new Date();
+    document.getElementById('last-refresh').textContent =
+      'Actualisé à ' + now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<div class="error-box">Erreur lors du chargement : ${e.message}</div>`;
+  }
+}
+
+function renderBar(label, count, total, colorClass, maxCount) {
+  const p = pct(count, total);
+  const widthPct = maxCount > 0 ? Math.round((count / maxCount) * 100) : p;
+  return `
+    <div class="bar-item">
+      <div class="bar-header">
+        <span class="bar-label">${label}</span>
+        <span class="bar-meta">${count.toLocaleString('fr-FR')} · ${p}%</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill ${colorClass}" style="width:${widthPct}%"></div>
+      </div>
+    </div>`;
+}
+
+function renderDiag(data) {
+  const { total, repartitions, completude, score } = data;
+  const r = repartitions;
+
+  // ---- SCORE GLOBAL ----
+  const scoreHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        Score global — ${total.toLocaleString('fr-FR')} élèves inscrits cette saison
+      </div>
+      <div class="score-grid">
+        <div class="score-tile blue">
+          <div class="score-num blue">${total.toLocaleString('fr-FR')}</div>
+          <div class="score-sub">Élèves inscrits</div>
+        </div>
+        <div class="score-tile green">
+          <div class="score-num green">${score.fiches_completes.toLocaleString('fr-FR')}</div>
+          <div class="score-sub">Fiches complètes</div>
+        </div>
+        <div class="score-tile red">
+          <div class="score-num red">${score.fiches_incompletes.toLocaleString('fr-FR')}</div>
+          <div class="score-sub">Fiches incomplètes</div>
+        </div>
+        <div class="score-tile ${score.pct_complet >= 70 ? 'green' : 'red'}">
+          <div class="score-num ${score.pct_complet >= 70 ? 'green' : 'red'}">${score.pct_complet}%</div>
+          <div class="score-sub">Complétude globale</div>
+        </div>
+      </div>
+    </div>`;
+
+  // ---- FORMULE ----
+  const maxFormuleCount = Math.max(...r.par_formule.map(f => f.count), 1);
+  const formuleHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        Répartition par formule
+      </div>
+      <div class="bar-list">
+        ${r.par_formule.map(f => renderBar(f.label, f.count, total, barFillColor(f.label), maxFormuleCount)).join('')}
+      </div>
+    </div>`;
+
+  // ---- SITE ----
+  const s = r.par_site;
+  const siteHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        Répartition par site
+      </div>
+      <div class="site-grid">
+        <div class="site-tile">
+          <div class="site-num">${s.arcachon_only.toLocaleString('fr-FR')}</div>
+          <div class="site-label">Arcachon uniquement</div>
+          <div class="site-pct">${pct(s.arcachon_only, total)}%</div>
+        </div>
+        <div class="site-tile">
+          <div class="site-num">${s.gujan_only.toLocaleString('fr-FR')}</div>
+          <div class="site-label">Gujan-Mestras uniquement</div>
+          <div class="site-pct">${pct(s.gujan_only, total)}%</div>
+        </div>
+        <div class="site-tile">
+          <div class="site-num">${s.both_sites.toLocaleString('fr-FR')}</div>
+          <div class="site-label">Inscrits aux deux sites</div>
+          <div class="site-pct">${pct(s.both_sites, total)}%</div>
+        </div>
+        <div class="site-tile" style="border-color:#fde68a;background:#fffbeb;">
+          <div class="site-num" style="color:var(--warning)">${s.non_assigne.toLocaleString('fr-FR')}</div>
+          <div class="site-label" style="color:#92400e;">Sans discipline assignée</div>
+          <div class="site-pct" style="color:var(--warning)">${pct(s.non_assigne, total)}%</div>
+        </div>
+      </div>
+    </div>`;
+
+  // ---- DISCIPLINE ----
+  const maxDiscCount = Math.max(...r.par_discipline.map(d => d.count), 1);
+  const discColors = ['rose', 'gold', 'blue', 'green', 'purple', 'warning', 'rose', 'gold'];
+  const discHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        </div>
+        Répartition par discipline
+      </div>
+      <div class="bar-list">
+        ${r.par_discipline.map((d, i) => renderBar(d.label, d.count, total, discColors[i % discColors.length], maxDiscCount)).join('')}
+      </div>
+    </div>`;
+
+  // ---- AGE ----
+  const ageEntries = Object.entries(r.par_age);
+  const ageHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        Répartition par tranche d'âge
+      </div>
+      <div class="age-grid">
+        ${ageEntries.map(([range, val]) => `
+          <div class="age-tile">
+            <div class="age-range">${range}</div>
+            <div class="age-count">${val.count.toLocaleString('fr-FR')}</div>
+            <div class="age-pct">${val.pct}%</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  // ---- ADHESION ----
+  const adh = r.adhesion;
+  const adhHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        Adhésion — saison en cours
+      </div>
+      <div class="bar-list">
+        ${renderBar('Adhésion payée', adh.payee, total, 'green', total)}
+        ${renderBar('Adhésion non payée / non renseignée', adh.non_payee, total, 'danger', total)}
+      </div>
+      <div style="margin-top:14px;font-size:13px;color:var(--muted);">
+        ${adh.pct_payee}% des élèves ont leur adhésion payée cette saison.
+      </div>
+    </div>`;
+
+  // ---- COMPLETUDE ----
+  const completudeHtml = `
+    <div class="card">
+      <div class="card-title">
+        <div class="badge-icon orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        </div>
+        Complétude des fiches — champs clés (classé du plus incomplet au plus complet)
+      </div>
+      <div class="completude-list">
+        ${completude.fields.map(f => `
+          <div class="completude-row">
+            <div class="completude-field">${f.label}</div>
+            <div class="completude-counts">${f.renseignees.toLocaleString('fr-FR')} / ${f.total.toLocaleString('fr-FR')} renseignées</div>
+            <div class="completude-bar-wrap">
+              <div class="bar-track">
+                <div class="bar-fill ${pctColor(f.pct)}" style="width:${f.pct}%"></div>
+              </div>
+            </div>
+            <div class="completude-pct ${pctTextClass(f.pct)}">${f.pct}%</div>
+            <span class="completude-tag ${pctTagClass(f.pct)}">${pctTagLabel(f.pct)}</span>
+          </div>`).join('')}
+      </div>
+      ${completude.note ? `<div class="note-box">ℹ️ ${completude.note}</div>` : ''}
+    </div>`;
+
+  document.getElementById('content').innerHTML =
+    scoreHtml + formuleHtml + siteHtml + discHtml + ageHtml + adhHtml + completudeHtml;
+}
+
+// ======== DISCIPLINE INLINE COMPARISON ========
+
+let _discCompData = null; // cached result from /api/comparatif/par-discipline
+
+async function loadDiscComp() {
+  const saisonId = document.getElementById('saison-select').value;
+  if (!saisonId) return;
+  try {
+    const resp = await fetch(`/api/comparatif/par-discipline?anchor_saison_id=${saisonId}`, {
+      headers: { 'Authorization': 'Bearer ' + _authToken }
+    });
+    if (!resp.ok) return;
+    _discCompData = await resp.json();
+  } catch (e) {
+    _discCompData = null;
+  }
+}
+
+// Inject inline n-1/n-2 rows under each discipline bar already rendered in #content.
+// Called after both loadDiag() and loadDiscComp() have resolved.
+function injectDiscCompRows() {
+  if (!_discCompData || !_discCompData.disciplines) return;
+
+  const { saisons, disciplines } = _discCompData;
+  // saisons[0]=n-2, saisons[1]=n-1, saisons[2]=n
+  const s1 = saisons[1]; // n-1
+  const s0 = saisons[0]; // n-2
+
+  // Map discipline name → comparison data for quick lookup
+  const discMap = {};
+  for (const d of disciplines) discMap[d.nom] = d;
+
+  // Find the discipline card: it's the one whose bar labels match discipline names.
+  // We find all .bar-label elements inside #content and group them by their parent .bar-list.
+  const barLists = document.querySelectorAll('#content .bar-list');
+  // The discipline bar-list will be the one where bar-labels match discipline names from the API.
+  // We identify it by checking if any bar-label text is in discMap.
+  let discBarList = null;
+  for (const bl of barLists) {
+    const labels = bl.querySelectorAll('.bar-label');
+    const matchCount = Array.from(labels).filter(l => discMap[l.textContent.trim()]).length;
+    if (matchCount > 0 && labels.length > 0 && matchCount === labels.length) {
+      discBarList = bl;
+      break;
+    }
+  }
+  if (!discBarList) return;
+
+  // Find max count across n to scale n-1/n-2 bars consistently
+  const maxCount = Math.max(1, ...disciplines.map(d => (d.data[2] ? d.data[2].eleves : 0)));
+
+  // For each .bar-item in the disc bar-list, inject sub-rows after it
+  const barItems = discBarList.querySelectorAll('.bar-item');
+  for (const item of barItems) {
+    const labelEl = item.querySelector('.bar-label');
+    if (!labelEl) continue;
+    const discNom = labelEl.textContent.trim();
+    const d = discMap[discNom];
+    if (!d) continue;
+
+    // Remove any previously injected sub-rows (reload resilience)
+    const existing = item.parentNode.querySelectorAll(`.disc-comparison-row[data-disc="${CSS.escape(discNom)}"]`);
+    existing.forEach(el => el.remove());
+
+    // Build n-1 row
+    const buildRow = (saisonObj, dataPoint, colorClass) => {
+      if (!saisonObj) return null;
+      const row = document.createElement('div');
+      row.className = 'disc-comparison-row';
+      row.setAttribute('data-disc', discNom);
+
+      if (!dataPoint) {
+        // Discipline absent this saison
+        row.innerHTML = `
+          <span class="disc-comp-tree">└</span>
+          <span class="disc-comp-label">${saisonObj.nom}</span>
+          <div class="disc-comp-track" style="flex:1;"></div>
+          <span class="disc-comp-meta">—</span>`;
+      } else {
+        const barW = maxCount > 0 ? Math.round((dataPoint.eleves / maxCount) * 100) : 0;
+        row.innerHTML = `
+          <span class="disc-comp-tree">└</span>
+          <span class="disc-comp-label">${saisonObj.nom}</span>
+          <div class="disc-comp-track">
+            <div class="disc-comp-fill ${colorClass}" style="width:${barW}%"></div>
+          </div>
+          <span class="disc-comp-meta">${dataPoint.eleves.toLocaleString('fr-FR')} élèves · ${formatEuros(dataPoint.revenus_cents)}</span>`;
+      }
+      return row;
+    };
+
+    const n1Data = d.data[1]; // index 1 = n-1
+    const n2Data = d.data[0]; // index 0 = n-2
+
+    const n1Row = buildRow(s1, n1Data, 'n1');
+    const n2Row = buildRow(s0, n2Data, 'n2');
+
+    // Insert after the bar-item: n-1 first, then n-2
+    if (n1Row) item.after(n1Row);
+    if (n2Row) {
+      if (n1Row) n1Row.after(n2Row);
+      else item.after(n2Row);
+    }
+  }
+}
+
+// ======== BOOT ========
+initUserUI();
+loadSaisons().then(() => {
+  loadDiag(); // fetches diagnostic + discComp in parallel, then injects rows
+  initComparatif();
+});
+
+// ======== COMPARATIF INTER-SAISONS ========
+
+let _compMode = 'hebdo';   // 'hebdo' | 'mensuel'
+let _compAnchorId = null;  // saison_id of anchor (n)
+let _allSaisons = [];      // full list from /api/saisons
+
+function setComparatifMode(mode) {
+  _compMode = mode;
+  document.getElementById('btn-hebdo').classList.toggle('active', mode === 'hebdo');
+  document.getElementById('btn-mensuel').classList.toggle('active', mode === 'mensuel');
+  document.getElementById('comp-table-label').textContent =
+    mode === 'hebdo'
+      ? 'Vue hebdomadaire — semaines relatives à la rentrée (semaine 1 = 1ère semaine de septembre)'
+      : 'Vue mensuelle — agrégats par mois calendaire';
+  loadComparatif();
+}
+
+async function initComparatif() {
+  // Populate anchor saison selector from already-loaded saisons
+  const sel = document.getElementById('comp-anchor-select');
+  const mainSel = document.getElementById('saison-select');
+  // Mirror options from main saison selector
+  sel.innerHTML = mainSel.innerHTML;
+  // Use the same selected value as main selector
+  sel.value = mainSel.value;
+  _compAnchorId = mainSel.value;
+  await loadComparatif();
+  document.getElementById('comparatif-card').style.display = '';
+}
+
+async function loadComparatif() {
+  const anchorId = document.getElementById('comp-anchor-select').value;
+  if (!anchorId) return;
+  _compAnchorId = anchorId;
+
+  // Show loading state in summary
+  document.getElementById('comp-summary').innerHTML =
+    '<div class="loading-box" style="grid-column:1/-1;padding:20px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div></div>';
+
+  try {
+    const resp = await fetch(
+      `/api/comparatif/inter-saisons?mode=${_compMode}&anchor_saison_id=${anchorId}`,
+      { headers: { 'Authorization': 'Bearer ' + _authToken } }
+    );
+    if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error || resp.statusText);
+    const data = await resp.json();
+    renderComparatif(data);
+  } catch (e) {
+    document.getElementById('comp-summary').innerHTML =
+      `<div class="error-box" style="grid-column:1/-1;">Erreur : ${e.message}</div>`;
+  }
+}
+
+// Season color classes: index 0 = n-2, 1 = n-1, 2 = n
+const SAISON_COLORS = ['s0', 's1', 's2'];
+
+function renderComparatif(data) {
+  const { saisons, mode, periods } = data;
+
+  // ── Legend ───────────────────────────────────────────────────────────────
+  const legendEl = document.getElementById('comp-legend');
+  legendEl.innerHTML = saisons.map((s, i) =>
+    s ? `<div class="legend-chip"><div class="legend-dot ${SAISON_COLORS[i]}"></div>${s.nom}</div>` : ''
+  ).join('');
+
+  // ── Per-saison totals ─────────────────────────────────────────────────────
+  const totals = saisons.map((s, si) => {
+    if (!s) return null;
+    let totalRev = 0, totalAdh = 0, totalResil = 0;
+    for (const p of periods) {
+      const d = p.data[si];
+      if (d) {
+        totalRev += d.revenus_cents || 0;
+        totalAdh += d.adhesions_payees || 0;
+        totalResil += d.resiliations || 0;
+      }
+    }
+    return { saison: s, rev: totalRev, adh: totalAdh, resil: totalResil };
+  });
+
+  const summaryEl = document.getElementById('comp-summary');
+  summaryEl.innerHTML = totals.map((t, i) => {
+    if (!t) return `<div class="saison-summary-tile ${SAISON_COLORS[i]}" style="opacity:0.35"><div class="summary-tile-nom ${SAISON_COLORS[i]}">—</div><div style="font-size:12px;color:var(--muted)">Pas de saison n-${2-i}</div></div>`;
+    return `
+      <div class="saison-summary-tile ${SAISON_COLORS[i]}">
+        <div class="summary-tile-nom ${SAISON_COLORS[i]}">${t.saison.nom}</div>
+        <div class="summary-kpis">
+          <div class="summary-kpi-line">
+            <span class="summary-kpi-key">Revenus projetés</span>
+            <span class="summary-kpi-num ${SAISON_COLORS[i]}">${formatEuros(t.rev)}</span>
+          </div>
+          <div class="summary-kpi-line">
+            <span class="summary-kpi-key">Adhésions payées</span>
+            <span class="summary-kpi-num ${SAISON_COLORS[i]}">${t.adh.toLocaleString('fr-FR')}</span>
+          </div>
+          <div class="summary-kpi-line">
+            <span class="summary-kpi-key">Résiliations</span>
+            <span class="summary-kpi-num ${SAISON_COLORS[i]}">${t.resil.toLocaleString('fr-FR')}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // ── Detailed table ────────────────────────────────────────────────────────
+  const validSaisons = saisons.filter(Boolean);
+  if (periods.length === 0) {
+    document.getElementById('comp-table').innerHTML = '<thead><tr><th>Période</th></tr></thead><tbody><tr><td colspan="10" style="text-align:center;padding:24px;color:var(--muted);">Aucune donnée pour les saisons sélectionnées.</td></tr></tbody>';
+    return;
+  }
+
+  // Compute max values per KPI for inline bar scaling
+  const maxAdh = Math.max(1, ...periods.flatMap(p => p.data.filter(Boolean).map(d => d.adhesions_payees)));
+  const maxRev = Math.max(1, ...periods.flatMap(p => p.data.filter(Boolean).map(d => d.revenus_cents)));
+
+  // Build header: Période | [S1: Revenus / Adhésions / Résiliations] × 3
+  let thead = '<tr><th class="period-col">Période</th>';
+  saisons.forEach((s, i) => {
+    const nom = s ? s.nom : `—`;
+    thead += `<th class="saison-col" colspan="3">${nom}</th>`;
+  });
+  thead += '</tr>';
+  thead += '<tr><th></th>';
+  saisons.forEach((s, i) => {
+    thead += `<th class="saison-col" style="font-weight:500;font-size:11px;color:var(--muted);">Revenus</th>`;
+    thead += `<th class="saison-col" style="font-weight:500;font-size:11px;color:var(--muted);">Adhésions</th>`;
+    thead += `<th class="saison-col" style="font-weight:500;font-size:11px;color:var(--muted);">Résiliations</th>`;
+  });
+  thead += '</tr>';
+
+  let tbody = '';
+  for (const period of periods) {
+    tbody += `<tr><td class="period-col">${period.label}</td>`;
+    period.data.forEach((d, i) => {
+      if (!d) {
+        tbody += `<td class="kpi-cell empty" colspan="3"><span class="num ${SAISON_COLORS[i]}">—</span></td>`;
+        return; // this return is for the forEach callback
+      }
+      const adhBarW = Math.round((d.adhesions_payees / maxAdh) * 60);
+      const revBarW = Math.round((d.revenus_cents / maxRev) * 60);
+      tbody += `
+        <td class="kpi-cell">
+          <span class="num ${SAISON_COLORS[i]}">${formatEuros(d.revenus_cents)}</span>
+          <span class="bar-inline ${SAISON_COLORS[i]}" style="width:${revBarW}px;display:block;margin-top:3px;"></span>
+        </td>
+        <td class="kpi-cell">
+          <span class="num ${SAISON_COLORS[i]}">${d.adhesions_payees.toLocaleString('fr-FR')}</span>
+          <span class="bar-inline ${SAISON_COLORS[i]}" style="width:${adhBarW}px;display:block;margin-top:3px;"></span>
+        </td>
+        <td class="kpi-cell">
+          <span class="num ${SAISON_COLORS[i]}" style="${d.resiliations > 0 ? 'color:var(--danger)' : ''}">${d.resiliations.toLocaleString('fr-FR')}</span>
+        </td>`;
+    });
+    tbody += '</tr>';
+  }
+
+  const table = document.getElementById('comp-table');
+  table.innerHTML = `<thead>${thead}</thead><tbody>${tbody}</tbody>`;
+}
+
+function formatEuros(cents) {
+  if (!cents) return '0 €';
+  const euros = cents / 100;
+  if (euros >= 1000) return (euros / 1000).toFixed(1).replace('.', ',') + ' k€';
+  return euros.toLocaleString('fr-FR') + ' €';
+}
+
+</script>
+</body>
+</html>

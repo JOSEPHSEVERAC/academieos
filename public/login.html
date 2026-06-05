@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Connexion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a;
+      --cream: #faf8f5;
+      --rose: #c44d56;
+      --rose-light: #e8949a;
+      --gold: #c9a96e;
+      --slate: #555;
+      --muted: #999;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .login-wrapper {
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .brand span { color: var(--rose); }
+    .brand p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .card .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .fg { margin-bottom: 20px; }
+    .fg label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate);
+      margin-bottom: 6px;
+    }
+    .fg input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e5e3de;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      background: var(--cream);
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .fg input:focus { border-color: var(--rose); background: #fff; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn:hover { background: #222; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .footer-links {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .footer-links a {
+      color: var(--rose);
+      text-decoration: none;
+    }
+    .footer-links a:hover { text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      .card { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="brand">
+      <h1>Académie<span>OS</span></h1>
+      <p>Système de gestion — THERPSIKHOROS SAS</p>
+    </div>
+
+    <div class="card">
+      <h2>Connexion</h2>
+      <p class="subtitle">Entrez vos identifiants pour accéder au tableau de bord.</p>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <form id="login-form">
+        <div class="fg">
+          <label for="email">Adresse email</label>
+          <input type="email" id="email" name="email" placeholder="prenom@exemple.com" required autocomplete="email">
+        </div>
+        <div class="fg">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn" id="submit-btn">Continuer →</button>
+      </form>
+    </div>
+
+    <div class="footer-links">
+      <a href="/">← Retour à l'accueil</a>
+    </div>
+  </div>
+
+  <script>
+    // If already logged in, redirect to dashboard
+    const token = localStorage.getItem('akademie_token');
+    if (token) {
+      fetch('/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+        .then(r => r.ok ? window.location.replace('/dashboard') : null)
+        .catch(() => null);
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const errorEl = document.getElementById('error-msg');
+      errorEl.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Connexion…';
+
+      try {
+        const res = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Erreur de connexion';
+          errorEl.classList.add('show');
+          return;
+        }
+        // Store pending token and redirect to 2FA verification
+        sessionStorage.setItem('akademie_pending_token', data.pending_token);
+        sessionStorage.setItem('akademie_pending_email', data.email);
+        window.location.href = '/verify-2fa';
+      } catch (err) {
+        errorEl.textContent = 'Erreur de connexion. Vérifiez votre connexion internet.';
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Continuer →';
+      }
+    });
+  </script>
+</body>
+</html>

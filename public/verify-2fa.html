@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AcadémieOS — Vérification</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0a;
+      --cream: #faf8f5;
+      --rose: #c44d56;
+      --rose-light: #e8949a;
+      --slate: #555;
+      --muted: #999;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1,h2,h3 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+    .wrapper {
+      width: 100%;
+      max-width: 440px;
+      padding: 24px;
+    }
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .brand h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .brand span { color: var(--rose); }
+    .brand p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 2px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card h2 { font-size: 20px; margin-bottom: 8px; }
+    .card .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+    .card .email-hint {
+      font-weight: 600;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 32px;
+      word-break: break-all;
+    }
+
+    .code-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+    .code-input {
+      width: 52px;
+      height: 62px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      border: 2px solid #e5e3de;
+      border-radius: 10px;
+      background: var(--cream);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .code-input:focus { border-color: var(--rose); background: #fff; }
+    .code-input.filled { border-color: #2d8a4e; background: #f0fdf4; }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { background: #222; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .timer {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 16px;
+    }
+    .timer span { font-weight: 600; color: var(--ink); }
+    .timer.expired span { color: var(--rose); }
+
+    .error-msg {
+      background: #fee2e2;
+      color: #b91c1c;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back-link a { color: var(--rose); text-decoration: none; }
+    .back-link a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="brand">
+      <h1>Académie<span>OS</span></h1>
+      <p>Vérification en 2 étapes</p>
+    </div>
+
+    <div class="card">
+      <h2>Code de vérification</h2>
+      <p class="subtitle">Un code à 6 chiffres a été envoyé à</p>
+      <p class="email-hint" id="email-hint">—</p>
+
+      <div class="error-msg" id="error-msg"></div>
+
+      <div class="code-group" id="code-group">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="0">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="1">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="2">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="3">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="4">
+        <input class="code-input" type="text" inputmode="numeric" maxlength="1" data-idx="5">
+      </div>
+
+      <button class="btn" id="verify-btn" disabled>Vérifier →</button>
+
+      <div class="timer" id="timer">
+        Expire dans <span id="timer-val">5:00</span>
+      </div>
+    </div>
+
+    <p class="back-link"><a href="/login">← Revenir à la connexion</a></p>
+  </div>
+
+  <script>
+    const pendingToken = sessionStorage.getItem('akademie_pending_token');
+    const pendingEmail = sessionStorage.getItem('akademie_pending_email');
+
+    if (!pendingToken) {
+      window.location.replace('/login');
+    }
+
+    document.getElementById('email-hint').textContent = pendingEmail || '—';
+
+    // Timer countdown (5 minutes)
+    let secondsLeft = 5 * 60;
+    const timerEl = document.getElementById('timer-val');
+    const timerWrap = document.getElementById('timer');
+    const interval = setInterval(() => {
+      secondsLeft--;
+      if (secondsLeft <= 0) {
+        clearInterval(interval);
+        timerEl.textContent = 'Expiré';
+        timerWrap.classList.add('expired');
+        return;
+      }
+      const m = Math.floor(secondsLeft / 60);
+      const s = secondsLeft % 60;
+      timerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
+    }, 1000);
+
+    // Code input logic
+    const inputs = Array.from(document.querySelectorAll('.code-input'));
+    inputs[0].focus();
+
+    inputs.forEach((inp, i) => {
+      inp.addEventListener('input', (e) => {
+        const val = e.target.value.replace(/\D/g, '');
+        e.target.value = val;
+        if (val && i < inputs.length - 1) inputs[i + 1].focus();
+        checkComplete();
+      });
+
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) {
+          inputs[i - 1].focus();
+          inputs[i - 1].value = '';
+        }
+        if (e.key === 'Enter') submitCode();
+      });
+
+      inp.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        pasted.split('').forEach((ch, idx) => {
+          if (inputs[idx]) inputs[idx].value = ch;
+        });
+        if (pasted.length >= 6) inputs[5].focus();
+        checkComplete();
+      });
+    });
+
+    function checkComplete() {
+      const code = inputs.map(i => i.value).join('');
+      const complete = code.length === 6;
+      document.getElementById('verify-btn').disabled = !complete;
+      inputs.forEach(i => i.classList.toggle('filled', i.value.length === 1));
+      if (complete) submitCode();
+    }
+
+    function getCode() {
+      return inputs.map(i => i.value).join('');
+    }
+
+    async function submitCode() {
+      const code = getCode();
+      if (code.length !== 6) return;
+
+      const btn = document.getElementById('verify-btn');
+      const errorEl = document.getElementById('error-msg');
+      errorEl.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Vérification…';
+
+      try {
+        const res = await fetch('/auth/verify-2fa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pending_token: pendingToken, code })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorEl.textContent = data.error || 'Code incorrect';
+          errorEl.classList.add('show');
+          inputs.forEach(i => i.value = '');
+          inputs[0].focus();
+          checkComplete();
+          return;
+        }
+
+        // Store session
+        localStorage.setItem('akademie_token', data.token);
+        localStorage.setItem('akademie_user', JSON.stringify(data.user));
+        sessionStorage.removeItem('akademie_pending_token');
+        sessionStorage.removeItem('akademie_pending_email');
+
+        // Redirect to onboarding if profile not yet completed
+        if (data.user && data.user.onboarding_completed === false) {
+          window.location.replace('/onboarding');
+        } else {
+          window.location.replace('/dashboard');
+        }
+      } catch (err) {
+        errorEl.textContent = 'Erreur de connexion. Réessayez.';
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Vérifier →';
+      }
+    }
+
+    document.getElementById('verify-btn').addEventListener('click', submitCode);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Appel">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Appel — L'Académie</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #2e2e2e;
+      --rose: #c44d56;
+      --rose-dim: rgba(196,77,86,0.15);
+      --gold: #c9a96e;
+      --gold-dim: rgba(201,169,110,0.15);
+      --green: #4ade80;
+      --green-dim: rgba(74,222,128,0.12);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.12);
+      --text: #f0ece6;
+      --muted: #777;
+      --muted2: #444;
+      --ink: #0a0a0a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      touch-action: manipulation;
+    }
+
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+    /* ── App Shell ── */
+    #app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    .back-btn:active { background: var(--surface2); }
+    .back-btn svg { width: 20px; height: 20px; }
+
+    .header-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-title .sub {
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stylus-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .stylus-badge svg { width: 20px; height: 20px; }
+
+    /* ── Scrollable body ── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    /* ── Screens ── */
+    .screen { display: none; height: 100%; }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ── Step 1: Date picker ── */
+    .date-screen {
+      padding: 32px 20px 20px;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+    }
+
+    .brand-mark {
+      text-align: center;
+    }
+    .brand-mark h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .brand-mark h1 span { color: var(--rose); }
+    .brand-mark p {
+      color: var(--muted);
+      font-size: 15px;
+      margin-top: 6px;
+    }
+
+    .date-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px;
+    }
+
+    .date-card label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .date-input-wrap {
+      position: relative;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      padding: 16px 18px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input[type="date"]:focus {
+      border-color: var(--rose);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      width: 24px;
+      height: 24px;
+    }
+
+    .date-day-label {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--muted);
+      text-align: center;
+      min-height: 20px;
+      transition: opacity 0.2s;
+    }
+    .date-day-label.highlight { color: var(--gold); font-weight: 500; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 18px;
+      border-radius: 14px;
+      background: var(--rose);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+      transition: background 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-primary:active { transform: scale(0.98); background: #b0434b; }
+    .btn-primary:disabled { background: var(--muted2); cursor: not-allowed; }
+
+    /* ── Step 2: Course list ── */
+    .classes-screen {
+      padding: 0;
+    }
+
+    .section-head {
+      padding: 20px 20px 12px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-head h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-head p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .class-list {
+      padding: 12px 20px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .class-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      user-select: none;
+    }
+    .class-card:active {
+      background: var(--surface2);
+      border-color: var(--rose);
+    }
+
+    .class-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .class-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .class-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .class-meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .class-arrow {
+      color: var(--muted2);
+      flex-shrink: 0;
+    }
+    .class-arrow svg { width: 20px; height: 20px; display: block; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      opacity: 0.3;
+      display: block;
+    }
+    .empty-state h3 {
+      font-size: 18px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    /* ── Step 3: Attendance — mirrors CRM layout ── */
+    .attendance-screen {
+      padding: 0;
+    }
+
+    .attendance-toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    /* Search input inside toolbar */
+    .att-search {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .att-search:focus { border-color: var(--accent); }
+    .att-search::placeholder { color: var(--muted); }
+
+    /* Section divider: "Niveau correct" / "Autres niveaux" */
+    .att-section-header {
+      padding: 8px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .att-section-header:first-child { margin-top: 0; border-top: none; }
+    .att-section-header.other { color: #a0927e; }
+
+    /* CRM-style flat row list */
+    .att-list {
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 12px 20px 32px;
+      border: 1px solid var(--border);
+    }
+
+    .att-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      transition: border-left-color 0.2s;
+    }
+    .att-row:last-child { border-bottom: none; }
+
+    .att-row.status-present { border-left: 3px solid var(--green); }
+    .att-row.status-absent  { border-left: 3px solid var(--rose); }
+    .att-row.status-excused { border-left: 3px solid var(--amber); }
+
+    .att-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-right: 16px;
+    }
+
+    .att-radios {
+      display: flex;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .att-radio {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .att-radio input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .att-radio label {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .att-radio.p label { color: var(--green); }
+    .att-radio.a label { color: var(--rose); }
+    .att-radio.e label { color: var(--amber); }
+    .att-radio.p input { accent-color: var(--green); }
+    .att-radio.a input { accent-color: var(--rose); }
+    .att-radio.e input { accent-color: var(--amber); }
+
+    /* Saving state — dim row while API call in flight */
+    .att-row.saving { opacity: 0.6; pointer-events: none; }
+
+    /* Lock banner — shown when attendance is past 24h deadline */
+    .lock-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 16px 20px 4px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(201,169,110,0.1);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .lock-banner svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    /* Locked: radios become non-interactive */
+    .att-list.locked input[type="radio"] { pointer-events: none; cursor: default; opacity: 0.6; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      opacity: 0;
+      transition: all 0.2s ease;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+      max-width: 90vw;
+      text-align: center;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    #toast.success { border-color: var(--green); }
+    #toast.error   { border-color: var(--rose); }
+
+    /* ── Loading spinner ── */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--rose);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    /* ── PIN Auth gate ── */
+    .pin-gate {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px 48px;
+      gap: 0;
+    }
+    .pin-logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+    .pin-logo span { color: var(--rose); }
+    .pin-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+    .pin-dots {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .pin-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--muted2);
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .pin-dot.filled {
+      background: var(--rose);
+      border-color: var(--rose);
+    }
+    .pin-error {
+      font-size: 13px;
+      color: var(--rose);
+      min-height: 20px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 72px);
+      grid-template-rows: repeat(4, 72px);
+      gap: 12px;
+    }
+    .pin-key {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s, transform 0.1s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .pin-key:active { background: var(--rose-dim); transform: scale(0.93); }
+    .pin-key.del {
+      background: transparent;
+      font-size: 20px;
+      color: var(--muted);
+    }
+    .pin-key.del:active { background: var(--surface); color: var(--text); }
+    .pin-key.empty {
+      background: transparent;
+      cursor: default;
+    }
+    .pin-key.empty:active { background: transparent; transform: none; }
+    .pin-submit {
+      margin-top: 20px;
+      width: 240px;
+      height: 52px;
+      border-radius: 14px;
+      border: none;
+      background: var(--rose);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      opacity: 0.4;
+    }
+    .pin-submit.ready { opacity: 1; }
+    .pin-submit:active { transform: scale(0.97); }
+
+    /* ── Passagers box ── */
+    .passagers-box {
+      display: none;
+      margin: 0 20px 32px;
+      padding: 14px 16px;
+      background: rgba(249,115,22,0.08);
+      border: 1.5px solid rgba(249,115,22,0.35);
+      border-radius: 10px;
+    }
+    .passagers-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .passagers-label {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .passagers-sublabel {
+      font-size: 12px;
+      color: var(--amber);
+      margin-top: 2px;
+    }
+    .passagers-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .passagers-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .passagers-btn:active { background: var(--surface2); }
+    .passagers-count {
+      font-size: 22px;
+      font-weight: 800;
+      min-width: 36px;
+      text-align: center;
+      color: var(--text);
+    }
+    .passagers-save {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: #f97316;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .passagers-save:active { opacity: 0.8; }
+    .passagers-revenu {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--amber);
+      text-align: right;
+    }
+
+    /* ── Stylet badge on date screen ── */
+    .home-stylus-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      align-self: center;
+    }
+    .home-stylus-badge svg { width: 18px; height: 18px; }
+
+    /* ── PDF export buttons ── */
+    .pdf-export-row {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn-pdf {
+      flex: 1;
+      padding: 12px 10px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: border-color 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+    .btn-pdf:hover, .btn-pdf:active { border-color: var(--gold); color: var(--gold); }
+    .btn-pdf svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* ── Responsive tweaks ── */
+    @media (min-width: 600px) {
+      .date-screen { padding: 48px 32px; }
+      .date-card { max-width: 460px; }
+      .class-list { padding: 16px 28px 40px; }
+      .att-list { margin: 16px 28px 40px; max-width: 850px; }
+    }
+
+    /* On very narrow screens (phone portrait), stack radio row below name */
+    @media (max-width: 480px) {
+      .att-row { flex-direction: column; gap: 8px; align-items: flex-start; }
+      .att-name { margin-right: 0; }
+    }
+
+    /* ── Landscape on tablet ── */
+    @media (orientation: landscape) and (max-height: 600px) {
+      .header { padding: 10px 20px 8px; }
+      .date-screen { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header (hidden on date screen) -->
+  <div class="header" id="header" style="display:none">
+    <div class="header-left">
+      <button class="back-btn" id="backBtn" aria-label="Retour">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </button>
+      <div class="header-title">
+        <span id="headerTitle">Appel</span>
+        <span class="sub" id="headerSub"></span>
+      </div>
+    </div>
+    <div class="stylus-badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>
+      </svg>
+      Stylet uniquement
+    </div>
+  </div>
+
+  <!-- PIN auth gate (shown on first use or after session expiry) -->
+  <div id="authGate" class="body" style="display:none">
+    <div class="pin-gate">
+      <div class="pin-logo">L'<span>Académie</span></div>
+      <div class="pin-subtitle">Entrez votre code PIN</div>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot" id="dot0"></div>
+        <div class="pin-dot" id="dot1"></div>
+        <div class="pin-dot" id="dot2"></div>
+        <div class="pin-dot" id="dot3"></div>
+      </div>
+      <div class="pin-error" id="pinError"></div>
+      <div class="pin-keypad" id="pinKeypad">
+        <button class="pin-key" data-digit="1">1</button>
+        <button class="pin-key" data-digit="2">2</button>
+        <button class="pin-key" data-digit="3">3</button>
+        <button class="pin-key" data-digit="4">4</button>
+        <button class="pin-key" data-digit="5">5</button>
+        <button class="pin-key" data-digit="6">6</button>
+        <button class="pin-key" data-digit="7">7</button>
+        <button class="pin-key" data-digit="8">8</button>
+        <button class="pin-key" data-digit="9">9</button>
+        <button class="pin-key empty" aria-hidden="true"></button>
+        <button class="pin-key" data-digit="0">0</button>
+        <button class="pin-key del" id="pinDel" aria-label="Supprimer">⌫</button>
+      </div>
+      <button class="pin-submit" id="pinSubmit" onclick="submitPin()">Valider</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: Date selection -->
+  <div id="screenDate" class="screen body">
+    <div class="date-screen">
+      <div class="brand-mark">
+        <h1>L'<span>Académie</span></h1>
+        <p>Appel des élèves — tablette</p>
+      </div>
+
+      <!-- Stylet uniquement — visible dès l'accueil -->
+      <div class="home-stylus-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>
+        </svg>
+        Stylet uniquement
+      </div>
+
+      <div class="date-card">
+        <label>Date du cours</label>
+        <div class="date-input-wrap">
+          <input type="date" id="dateInput" autocomplete="off">
+        </div>
+        <div class="date-day-label" id="dateDayLabel"></div>
+      </div>
+      <div style="width:100%;max-width:400px">
+        <button class="btn-primary" id="btnChooseDate">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+          Voir les cours
+        </button>
+      </div>
+
+      <!-- PDF exports — planning + fiche d'inscription -->
+      <div class="pdf-export-row">
+        <button class="btn-pdf" id="btnPdfPlanning" onclick="openPdf('planning')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+          </svg>
+          Planning PDF
+        </button>
+        <button class="btn-pdf" id="btnPdfInscription" onclick="openPdf('inscription')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Fiche inscription
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Course list -->
+  <div id="screenClasses" class="screen body">
+    <div class="section-head">
+      <h2 id="classesTitle">Cours du jour</h2>
+      <p id="classesSub">Choisissez un cours pour faire l'appel</p>
+    </div>
+    <div id="classesList" class="class-list"></div>
+  </div>
+
+  <!-- SCREEN 3: Attendance — CRM-style layout -->
+  <div id="screenAttendance" class="screen body">
+    <div id="attBox"></div>
+    <!-- Passagers (invités ponctuels) — same logic as CRM -->
+    <div class="passagers-box" id="passagersBox">
+      <div class="passagers-inner">
+        <div>
+          <div class="passagers-label">Passagers — invités ponctuels</div>
+          <div class="passagers-sublabel">15 €/passage · pas de fiche élève</div>
+        </div>
+        <div class="passagers-controls">
+          <button type="button" class="passagers-btn" onclick="adjustPassagers(-1)">−</button>
+          <span class="passagers-count" id="passagersCount">0</span>
+          <button type="button" class="passagers-btn" onclick="adjustPassagers(1)">+</button>
+          <button type="button" class="passagers-save" onclick="savePassagers()">Enregistrer</button>
+        </div>
+      </div>
+      <div class="passagers-revenu" id="passagersRevenu"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const state = {
+  token: null,
+  user: null,
+  selectedDate: null,
+  selectedClass: null,
+  students: [],
+  classLevels: [],   // practice_levels defined on the class (max 2)
+  attSearch: '',     // live search string typed by user
+  attendance: {},  // { studentId: 'present'|'absent'|'excused' }
+  saving: new Set(),
+  isLocked: false    // true when 24h window has passed since class start
+};
+
+// Returns true when attendance editing is no longer allowed (24h after class start).
+function computeIsLocked(sessionDate, startTime) {
+  if (!sessionDate || !startTime) return false;
+  const [h, m] = String(startTime).split(':').map(Number);
+  const classStart = new Date(`${sessionDate}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`);
+  return Date.now() >= classStart.getTime() + 24 * 60 * 60 * 1000;
+}
+
+// ── DOM refs ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const screenDate       = $('screenDate');
+const screenClasses    = $('screenClasses');
+const screenAttendance = $('screenAttendance');
+const header           = $('header');
+const authGate         = $('authGate');
+
+// ── Days labels ───────────────────────────────────────
+const DAYS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const DAYS_SHORT = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+
+// ── Utils ─────────────────────────────────────────────
+// Tablet PIN sessions are stored separately from CRM credentials
+function getToken() {
+  return localStorage.getItem('tablet_pin_token') || null;
+}
+
+function today() {
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function fmt(dateStr) {
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fmtTime(t) {
+  return t ? t.slice(0, 5) : '';
+}
+
+function dayOfDate(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).getDay(); // 0=Sun..6=Sat
+}
+
+function showToast(msg, type = '') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'show ' + type;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = ''; }, 2600);
+}
+
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${state.token}`,
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ── Screens ───────────────────────────────────────────
+function showScreen(name) {
+  screenDate.classList.remove('active');
+  screenClasses.classList.remove('active');
+  screenAttendance.classList.remove('active');
+
+  if (name === 'date') {
+    screenDate.classList.add('active');
+    header.style.display = 'none';
+    $('backBtn').onclick = null;
+  } else if (name === 'classes') {
+    screenClasses.classList.add('active');
+    header.style.display = 'flex';
+    $('headerTitle').textContent = 'Cours du ' + fmt(state.selectedDate);
+    $('headerSub').textContent = DAYS[dayOfDate(state.selectedDate)];
+    $('backBtn').onclick = () => showScreen('date');
+  } else if (name === 'attendance') {
+    screenAttendance.classList.add('active');
+    header.style.display = 'flex';
+    const cls = state.selectedClass;
+    $('headerTitle').textContent = cls.discipline_name;
+    $('headerSub').textContent = `${fmtTime(cls.start_time)}–${fmtTime(cls.end_time)} · ${cls.location_name}`;
+    $('backBtn').onclick = () => showScreen('classes');
+  }
+}
+
+// ── Date screen ───────────────────────────────────────
+function initDateScreen() {
+  const inp = $('dateInput');
+  inp.value = today();
+  updateDayLabel(inp.value);
+
+  inp.addEventListener('change', () => updateDayLabel(inp.value));
+  inp.addEventListener('input', () => updateDayLabel(inp.value));
+
+  $('btnChooseDate').addEventListener('click', () => {
+    if (!inp.value) return showToast('Choisissez une date', 'error');
+    state.selectedDate = inp.value;
+    loadClasses();
+  });
+}
+
+function updateDayLabel(val) {
+  const lbl = $('dateDayLabel');
+  if (!val) { lbl.textContent = ''; return; }
+  const day = DAYS[dayOfDate(val)];
+  const isToday = val === today();
+  lbl.textContent = day + (isToday ? ' — aujourd\'hui' : '');
+  lbl.className = 'date-day-label' + (isToday ? ' highlight' : '');
+}
+
+// ── Classes screen ────────────────────────────────────
+async function loadClasses() {
+  showScreen('classes');
+  const dayNum = dayOfDate(state.selectedDate);
+  $('classesTitle').textContent = DAYS[dayNum] + ' ' + fmt(state.selectedDate);
+  $('classesSub').textContent = 'Sélectionnez un cours pour faire l\'appel';
+
+  const list = $('classesList');
+  list.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement…</div>';
+
+  try {
+    const classes = await apiFetch(`/api/classes?day_of_week=${dayNum}`);
+    renderClassList(classes);
+  } catch (e) {
+    list.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+      <h3>Erreur de chargement</h3>
+      <p>${e.message}</p>
+    </div>`;
+  }
+}
+
+function renderClassList(classes) {
+  const list = $('classesList');
+
+  if (!classes.length) {
+    list.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <h3>Aucun cours ce jour</h3>
+      <p>Il n'y a pas de cours programmés pour ce jour de la semaine.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  classes.forEach(cls => {
+    const card = document.createElement('div');
+    card.className = 'class-card';
+    card.innerHTML = `
+      <div class="class-dot" style="background:${cls.discipline_color || '#c44d56'}"></div>
+      <div class="class-info">
+        <div class="class-name">${esc(cls.discipline_name)}${cls.secondary_label ? ' <small style="font-weight:500;color:var(--muted)">· ' + esc(cls.secondary_label) + '</small>' : ''}</div>
+        <div class="class-meta">${fmtTime(cls.start_time)}–${fmtTime(cls.end_time)} · ${esc(cls.location_name)} · ${esc(cls.level || 'Tous niveaux')}</div>
+      </div>
+      <span class="class-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+    `;
+    card.addEventListener('click', () => {
+      state.selectedClass = cls;
+      loadAttendance(cls);
+    });
+    list.appendChild(card);
+  });
+}
+
+// ── Attendance screen ─────────────────────────────────
+async function loadAttendance(cls) {
+  showScreen('attendance');
+  state.attendance = {};
+  state.students = [];
+
+  // Hide passager box while loading
+  const passagersBox = $('passagersBox');
+  if (passagersBox) passagersBox.style.display = 'none';
+
+  const attBox = $('attBox');
+  attBox.innerHTML = '<div class="loading"><div class="spinner"></div>Chargement des élèves…</div>';
+
+  try {
+    const [studentsData, existing, passagersData] = await Promise.all([
+      apiFetch(`/api/classes/${cls.id}/students`),
+      apiFetch(`/api/attendance/${cls.id}/${state.selectedDate}`),
+      apiFetch(`/api/classes/${cls.id}/passagers/${state.selectedDate}`).catch(() => ({ count: 0 }))
+    ]);
+
+    // API now returns { class_practice_levels, students }
+    state.students = studentsData.students || studentsData;
+    state.classLevels = studentsData.class_practice_levels || [];
+    state.attSearch = '';
+    // Compute lock: 24h after class start time on the session date
+    state.isLocked = computeIsLocked(state.selectedDate, cls.start_time);
+    existing.forEach(r => {
+      state.attendance[r.student_id] = r.status;
+    });
+
+    // Show and populate passager counter
+    if (passagersBox) {
+      const countEl = $('passagersCount');
+      const revEl = $('passagersRevenu');
+      const passCount = (passagersData && passagersData.count) || 0;
+      if (countEl) countEl.textContent = passCount;
+      if (revEl) revEl.textContent = passCount > 0 ? 'Revenu : ' + (passCount * 15).toLocaleString('fr-FR') + ' €' : '';
+      passagersBox.style.display = 'block';
+    }
+
+    renderStudents();
+  } catch (e) {
+    attBox.innerHTML = `<div class="empty-state" style="padding:48px 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+      <h3>Erreur de chargement</h3>
+      <p>${e.message}</p>
+    </div>`;
+  }
+}
+
+/* Builds a single att-row HTML string for a student. */
+function buildStudentRow(s) {
+  const st = state.attendance[s.id] || '';
+  const statusClass = st ? ` status-${st}` : '';
+  return `<div class="att-row${statusClass}" id="row-${s.id}">
+      <div class="att-name">${esc(s.last_name)} ${esc(s.first_name)}</div>
+      <div class="att-radios">
+        <div class="att-radio p">
+          <input type="radio" name="att-${s.id}" value="present" id="p-${s.id}" ${st==='present'?'checked':''}>
+          <label for="p-${s.id}">&#10003; Présent</label>
+        </div>
+        <div class="att-radio a">
+          <input type="radio" name="att-${s.id}" value="absent" id="a-${s.id}" ${st==='absent'?'checked':''}>
+          <label for="a-${s.id}">&#10007; Absent</label>
+        </div>
+        <div class="att-radio e">
+          <input type="radio" name="att-${s.id}" value="excused" id="e-${s.id}" ${st==='excused'?'checked':''}>
+          <label for="e-${s.id}">&#8211; Excusé</label>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* Renders student list using CRM-style flat rows with radio buttons.
+   - Shows a search input at the top for filtering by name.
+   - If the class has practice_levels defined, splits students into two sections:
+       (a) students whose practice_levels overlap with the class levels
+       (b) "Autres niveaux / Non renseigné" for the rest
+   - All enrolled students remain visible — this is grouping, not filtering.
+   - Radios are toggleable: clicking an already-selected status deselects it (returns to unmarked). */
+function renderStudents() {
+  const box = $('attBox');
+
+  if (!state.students.length) {
+    box.innerHTML = `<div class="empty-state" style="padding:48px 20px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+      <h3>Aucun élève inscrit</h3>
+      <p>Aucun élève n'est inscrit à cette discipline.</p>
+    </div>`;
+    return;
+  }
+
+  // Apply search filter (by last_name or first_name, case-insensitive)
+  const q = (state.attSearch || '').trim().toLowerCase();
+  const visible = q
+    ? state.students.filter(s =>
+        s.last_name.toLowerCase().includes(q) ||
+        s.first_name.toLowerCase().includes(q))
+    : state.students;
+
+  const locked = state.isLocked;
+
+  // Lock banner injected before toolbar when 24h window is past
+  let html = locked
+    ? `<div class="lock-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Fiche verrouillée — délai de 24h dépassé
+      </div>`
+    : '';
+
+  // Build toolbar (search only — no bulk actions)
+  html += `<div class="attendance-toolbar">
+    <input type="text" class="att-search" id="attSearchInput" placeholder="Rechercher un eleve…" value="${esc(state.attSearch || '')}" autocomplete="off">
+  </div>`;
+
+  const classLevels = state.classLevels || [];
+
+  const listClass = locked ? 'att-list locked' : 'att-list';
+
+  if (!classLevels.length) {
+    // No levels defined on class → single flat list
+    if (!visible.length) {
+      html += `<div class="empty-state" style="padding:32px 20px">
+        <p>Aucun résultat pour « ${esc(q)} »</p>
+      </div>`;
+    } else {
+      html += `<div class="${listClass}">`;
+      visible.forEach(s => { html += buildStudentRow(s); });
+      html += '</div>';
+    }
+  } else {
+    // Partition: students whose practice_levels overlap with class levels go first
+    const matching = visible.filter(s => {
+      const sl = Array.isArray(s.practice_levels) ? s.practice_levels : [];
+      return sl.some(l => classLevels.includes(l));
+    });
+    const others = visible.filter(s => {
+      const sl = Array.isArray(s.practice_levels) ? s.practice_levels : [];
+      return !sl.some(l => classLevels.includes(l));
+    });
+
+    const levelLabel = classLevels.join(' / ');
+
+    if (!visible.length) {
+      html += `<div class="empty-state" style="padding:32px 20px">
+        <p>Aucun résultat pour « ${esc(q)} »</p>
+      </div>`;
+    } else {
+      if (matching.length) {
+        html += `<div class="att-section-header">${esc(levelLabel)}</div>`;
+        html += `<div class="${listClass}">`;
+        matching.forEach(s => { html += buildStudentRow(s); });
+        html += '</div>';
+      }
+      if (others.length) {
+        html += `<div class="att-section-header other">Autres niveaux / Non renseigné</div>`;
+        html += `<div class="${listClass}">`;
+        others.forEach(s => { html += buildStudentRow(s); });
+        html += '</div>';
+      }
+    }
+  }
+
+  box.innerHTML = html;
+
+  // Re-bind search input — input event triggers re-render with updated filter
+  const searchEl = $('attSearchInput');
+  if (searchEl) {
+    searchEl.addEventListener('input', function() {
+      state.attSearch = this.value;
+      renderStudents();
+      // Restore focus after re-render
+      const el = $('attSearchInput');
+      if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+  }
+
+  // Attach toggle-aware click handlers to each radio button.
+  // Use JS state (not mousedown) to detect re-clicks — mousedown doesn't fire on touch devices.
+  box.querySelectorAll('input[type="radio"]').forEach(radio => {
+    radio.addEventListener('click', function() {
+      const studentId = parseInt(this.name.replace('att-', ''));
+      const value = this.value;
+      const currentStatus = state.attendance[studentId] || null;
+      if (currentStatus === value) {
+        // Re-clicked the same status → deselect (return to unmarked)
+        this.checked = false;
+        markAttendance(studentId, null);
+      } else {
+        // New selection
+        markAttendance(studentId, value);
+      }
+    });
+  });
+}
+
+async function markAttendance(studentId, status) {
+  // Refuse writes when locked — belt-and-suspenders (backend also rejects)
+  if (state.isLocked) { showToast('Fiche verrouillée — 24h dépassées', 'error'); return; }
+  if (state.saving.has(studentId)) return;
+
+  const prevStatus = state.attendance[studentId] || null;
+  if (prevStatus === status) return;
+
+  // Optimistic update
+  if (status) {
+    state.attendance[studentId] = status;
+  } else {
+    delete state.attendance[studentId];
+  }
+  updateRowUI(studentId, status);
+
+  state.saving.add(studentId);
+  setSaving(studentId, true);
+
+  try {
+    if (status) {
+      // Selection or change — upsert attendance record
+      await apiFetch('/api/attendance', {
+        method: 'POST',
+        body: JSON.stringify({
+          class_id: state.selectedClass.id,
+          student_id: studentId,
+          session_date: state.selectedDate,
+          status
+        })
+      });
+    } else {
+      // Deselection — remove attendance record
+      await apiFetch('/api/attendance/remove', {
+        method: 'POST',
+        body: JSON.stringify({
+          class_id: state.selectedClass.id,
+          student_id: studentId,
+          session_date: state.selectedDate
+        })
+      });
+    }
+  } catch (e) {
+    // Rollback
+    if (prevStatus) {
+      state.attendance[studentId] = prevStatus;
+    } else {
+      delete state.attendance[studentId];
+    }
+    updateRowUI(studentId, prevStatus);
+    showToast('Erreur enregistrement — réessayez', 'error');
+  } finally {
+    state.saving.delete(studentId);
+    setSaving(studentId, false);
+  }
+}
+
+function updateRowUI(studentId, status) {
+  const row = document.getElementById(`row-${studentId}`);
+  if (!row) return;
+  // Update row status class (left-border color)
+  row.className = 'att-row' + (status ? ` status-${status}` : '');
+  if (status) {
+    // Check the correct radio
+    const radio = row.querySelector(`input[value="${status}"]`);
+    if (radio) radio.checked = true;
+  } else {
+    // Deselection — uncheck all radios in this row
+    row.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; });
+  }
+}
+
+function setSaving(studentId, saving) {
+  const row = document.getElementById(`row-${studentId}`);
+  if (!row) return;
+  row.classList.toggle('saving', saving);
+}
+
+// ── Passagers ─────────────────────────────────────────
+function adjustPassagers(delta) {
+  const el = $('passagersCount');
+  const revEl = $('passagersRevenu');
+  const current = parseInt(el.textContent) || 0;
+  const next = Math.max(0, current + delta);
+  el.textContent = next;
+  if (revEl) revEl.textContent = next > 0 ? 'Revenu : ' + (next * 15).toLocaleString('fr-FR') + ' €' : '';
+}
+
+async function savePassagers() {
+  if (state.isLocked) { showToast('Fiche verrouillée — 24h dépassées', 'error'); return; }
+  const cls = state.selectedClass;
+  const date = state.selectedDate;
+  const count = parseInt($('passagersCount').textContent) || 0;
+  if (!cls || !date) { showToast('Cours ou date manquant', 'error'); return; }
+  try {
+    await apiFetch('/api/classes/' + cls.id + '/passagers/' + date, {
+      method: 'POST',
+      body: JSON.stringify({ count })
+    });
+    showToast('Passagers enregistrés (' + count + ')', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+// ── Escape util ───────────────────────────────────────
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── PIN keypad logic ────────────────────────────────────
+let pinBuffer = '';
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    const dot = $('dot' + i);
+    if (dot) dot.classList.toggle('filled', i < pinBuffer.length);
+  }
+  const submitBtn = $('pinSubmit');
+  if (submitBtn) submitBtn.classList.toggle('ready', pinBuffer.length >= 4);
+}
+
+function pinInput(digit) {
+  if (pinBuffer.length >= 6) return; // max 6 digits
+  pinBuffer += digit;
+  $('pinError').textContent = '';
+  updatePinDots();
+  // Auto-submit at 6 digits
+  if (pinBuffer.length === 6) setTimeout(submitPin, 80);
+}
+
+function pinDel() {
+  if (pinBuffer.length === 0) return;
+  pinBuffer = pinBuffer.slice(0, -1);
+  $('pinError').textContent = '';
+  updatePinDots();
+}
+
+async function submitPin() {
+  if (pinBuffer.length < 4) return;
+  const submitBtn = $('pinSubmit');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '…'; }
+
+  try {
+    const res = await fetch('/api/pin/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin: pinBuffer })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Code PIN incorrect');
+
+    localStorage.setItem('tablet_pin_token', data.token);
+    state.token = data.token;
+    authGate.style.display = 'none';
+    bootApp();
+  } catch (e) {
+    pinBuffer = '';
+    updatePinDots();
+    $('pinError').textContent = e.message || 'Code incorrect';
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Valider'; }
+  }
+}
+
+function bootApp() {
+  initDateScreen();
+  showScreen('date');
+  screenDate.classList.add('active');
+}
+
+// ── PDF exports ───────────────────────────────────────
+// Opens planning or inscription PDF in a new tab.
+// Passes the tablet PIN token as ?token= so the server can validate the session
+// (the blanket /api middleware accepts Bearer headers OR ?token= query params).
+function openPdf(type) {
+  const token = state.token;
+  // Cache-busting timestamp ensures browser never serves stale PDF
+  const params = new URLSearchParams();
+  if (token) params.set('token', token);
+  params.set('_t', Date.now());
+  window.open(`/api/appel-pdf/${type}?${params.toString()}`, '_blank');
+}
+
+// ── Init ──────────────────────────────────────────────
+async function init() {
+  state.token = getToken();
+
+  if (state.token) {
+    // Verify tablet PIN session is still valid
+    try {
+      await apiFetch('/api/pin/verify');
+      bootApp();
+      return;
+    } catch (e) {
+      // Session expired or revoked — clear and show PIN gate
+      localStorage.removeItem('tablet_pin_token');
+      state.token = null;
+    }
+  }
+
+  // Show PIN entry screen
+  authGate.style.display = 'flex';
+
+  // Wire keypad
+  document.querySelectorAll('.pin-key[data-digit]').forEach(btn => {
+    btn.addEventListener('click', () => pinInput(btn.dataset.digit));
+  });
+  const delBtn = $('pinDel');
+  if (delBtn) delBtn.addEventListener('click', pinDel);
+}
+
+init();
+
+// Register service worker for PWA installability — scoped to /appel only.
+// On update, reload immediately so the user never sees stale cached content.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js', { scope: '/appel' })
+      .then(reg => {
+        // Check for updates when tab/PWA regains focus (e.g. after being backgrounded)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') reg.update();
+        });
+      })
+      .catch(() => {});
+  });
+
+  // When a new SW activates, reload to pick up fresh cached shell
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) { refreshing = true; location.reload(); }
+  });
+}
+</script>
+
+</body>
+</html>
