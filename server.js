@@ -3798,7 +3798,23 @@ app.get('/api/diag/email', async (req, res) => {
   }
   res.json(result);
 });
-
+// ── RESET ADMIN TEMPORAIRE — À SUPPRIMER APRÈS ──────────────────
+app.get('/reset-admin-secret-2026', async (req, res) => {
+  try {
+    const hash = await bcrypt.hash('AcademieAdmin2026!', 10);
+    const r = await pool.query(
+      `UPDATE users SET password = $1 WHERE role = 'admin' RETURNING id, email, role`,
+      [hash]
+    );
+    if (r.rowCount === 0) {
+      return res.json({ ok: false, msg: 'Aucun admin trouvé dans users' });
+    }
+    res.json({ ok: true, updated: r.rows });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+// ────────────────────────────────────────────────────────────────
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
